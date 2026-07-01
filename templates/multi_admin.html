@@ -150,13 +150,23 @@
         </div>
     </main>
 
+    <div id="membership-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
+        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
+            <div class="border-b border-slate-800 pb-2"><h3 class="text-md font-black text-white" id="modal-title">Allocate Group Members</h3></div>
+            <input type="hidden" id="modal-group-id">
+            <div id="modal-user-list" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
+            <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
+                <button onclick="closeMembershipModal()" class="bg-slate-800 text-white text-xs font-bold py-2.5 rounded-xl border border-slate-700">Cancel</button>
+                <button onclick="saveMembershipAllocation()" class="bg-indigo-600 text-white text-xs font-black py-2.5 rounded-xl">Save Assignment</button>
+            </div>
+        </div>
+    </div>
+
     <script>
-        // ON LOAD INITIALIZATION LOOP
         document.querySelectorAll('.admin-chit-card').forEach(card => {
             const id = parseInt(card.getAttribute('data-id'));
             if (id) {
                 loadAdminHistory(id);
-                // Bidding engine poll initialization loop (Fires every 2 seconds during an active session)
                 setInterval(() => { pollRoomState(id); }, 2000);
             }
         });
@@ -195,6 +205,7 @@
             const name = document.getElementById(`proxy-name-${id}`).value;
             const inc = document.getElementById(`proxy-inc-${id}`).value;
             await fetch('/api/chit/place-bid', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({group_id: id, increment: parseFloat(inc), proxy_name: name}) });
+            document.getElementById(`proxy-name-${id}`).value = '';
             document.getElementById(`proxy-inc-${id}`).value = '';
             pollRoomState(id);
         }
@@ -210,13 +221,17 @@
             const res = await fetch('/api/admin/inject-history', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ group_id: numericGroupId, month: parseInt(month), winning_bid: parseFloat(bid), winner_name: winner.trim() }) });
             if((await res.json()).success) {
                 alert("Saved successfully!");
-                window.location.reload();
+                document.getElementById('seed-month').value = '';
+                document.getElementById('seed-bid').value = '';
+                document.getElementById('seed-winner-name').value = '';
+                await loadAdminHistory(numericGroupId);
             }
         }
 
         function loadAdminHistory(groupId) {
             fetch(`/api/chit/history/${groupId}`).then(res => res.json()).then(result => {
                 const tbody = document.getElementById(`admin-ledger-body-${groupId}`);
+                if (!tbody) return;
                 if (result.success && result.history && result.history.length > 0) {
                     tbody.innerHTML = '';
                     result.history.forEach(item => {
@@ -233,6 +248,8 @@
                                 <td class="p-3 text-center text-cyan-400 font-mono">₹${Number(item.due_non_winner).toLocaleString('en-IN')}</td>
                             </tr>`);
                     });
+                } else {
+                    tbody.innerHTML = '<tr class="placeholder-ledger-row"><td colspan="6" class="text-center p-8 text-slate-500 italic">No cycles closed yet.</td></tr>';
                 }
             });
         }
@@ -240,14 +257,36 @@
         async function deleteHistoryRow(historyId, groupId) {
             if (confirm("Delete this month's record?")) {
                 await fetch(`/api/admin/delete-history/${historyId}`, { method: 'POST' });
-                window.location.reload();
+                await loadAdminHistory(groupId);
             }
         }
+
+        function generateInvite(id, name) { 
+            const schedElement = document.getElementById('sched-lbl-' + id);
+            const currentSchedule = schedElement ? schedElement.innerText.trim() : "📅 Pending Schedule";
+            const textMessage = `📢 *ChitHub Alert*\n\n*${name}* session has been synchronized.\n⏱️ *Time:* ${currentSchedule}\n\n🔗 *Join Live Room:* ${window.location.origin}`;
+            window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(textMessage)}`, '_blank'); 
+        }
+
         async function createNewChitGroup() { await fetch('/api/admin/create-group', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name: document.getElementById('new-g-name').value, pool: document.getElementById('new-g-pool').value, members: document.getElementById('new-g-members').value}) }); window.location.reload(); }
         async function commitSchedule(id) { const d = document.getElementById('date-'+id).value; const t = document.getElementById('time-'+id).value; await fetch('/api/admin/schedule-group', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ group_id: parseInt(id), date: d, time: t }) }); window.location.reload(); }
         async function openMembershipModal(groupId, groupName) { document.getElementById('modal-group-id').value = groupId; document.getElementById('modal-title').innerText = `🔒 Access Map: ${groupName}`; const res = await fetch(`/api/admin/group-members/${groupId}`); const data = await res.json(); const container = document.getElementById('modal-user-list'); container.innerHTML = ''; data.users.forEach(u => { container.insertAdjacentHTML('beforeend', `<label class="flex items-center justify-between p-2.5 bg-slate-950 rounded-xl border border-slate-800/60 cursor-pointer text-left"><div class="text-left"><span class="text-xs font-bold text-slate-200 block">${u.name}</span><span class="text-[10px] text-slate-500 font-mono">${u.phone}</span></div><input type="checkbox" value="${u.id}" ${u.is_member ? 'checked' : ''} class="w-4 h-4 rounded user-check-node"></label>`); }); document.getElementById('membership-modal').classList.remove('hidden'); }
         function closeMembershipModal() { document.getElementById('membership-modal').classList.add('hidden'); }
-        async function saveMembershipAllocation() { const groupId = document.getElementById('modal-group-id').value; const checkNodes = document.querySelectorAll('.user-check-node:checked'); const userIds = Array.from(checkNodes).map(node => parseInt(node.value)); await fetch('/api/admin/update-membership', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ group_id: groupId, user_ids: userIds }) }); closeMembershipModal(); }
+        
+        async function saveMembershipAllocation() { 
+            const groupId = document.getElementById('modal-group-id').value; 
+            const checkNodes = document.querySelectorAll('.user-check-node:checked'); 
+            const userIds = Array.from(checkNodes).map(node => parseInt(node.value)); 
+            const res = await fetch('/api/update-membership', { 
+                method: 'POST', 
+                headers: {'Content-Type': 'application/json'}, 
+                body: JSON.stringify({ group_id: parseInt(groupId), user_ids: userIds }) 
+            }); 
+            if ((await res.json()).success) {
+                alert("🔒 Group Access Matrix successfully synchronized!");
+                closeMembershipModal();
+            }
+        }
     </script>
 </body>
 </html>
