@@ -5,22 +5,18 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ChitHub - Organizer Core</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <style>
         .premium-bg {
             background-color: #0b0f19;
             background-image: 
                 radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.08) 0px, transparent 50%),
                 radial-gradient(at 50% 0%, rgba(34, 211, 238, 0.05) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.06) 0px, transparent 50%),
                 linear-gradient(rgba(255, 255, 255, 0.004) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(255, 255, 255, 0.004) 1px, transparent 1px);
-            background-size: 100% 100%, 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+            background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
         }
         .interactive-panel { transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
         .room-active { border-color: rgba(34, 211, 238, 0.4) !important; box-shadow: 0 0 35px rgba(34, 211, 238, 0.12); }
-        @keyframes soundWave { 0%, 100% { transform: scaleY(0.3); } 50% { transform: scaleY(1); } }
-        .wave-bar { transform-origin: bottom; animation: soundWave 1.2s ease-in-out infinite; }
     </style>
 </head>
 <body class="premium-bg text-slate-100 font-sans min-h-screen relative antialiased">
@@ -28,7 +24,7 @@
     <nav class="bg-slate-950/70 backdrop-blur-md border-b border-slate-800/60 p-4 flex justify-between items-center shadow-lg sticky top-0 z-40">
         <div>
             <h1 class="text-xl font-black bg-gradient-to-r from-indigo-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">ChitHub Admin Command</h1>
-            <p class="text-[9px] text-slate-500 font-mono tracking-widest uppercase">Node Security Status: Online</p>
+            <p class="text-[9px] text-slate-500 font-mono tracking-widest">Node Security Status: Optimized</p>
         </div>
         <a href="/logout" class="bg-slate-900/80 border border-slate-800 px-4 py-2 rounded-xl text-xs font-bold transition-all backdrop-blur-sm">Logout Console</a>
     </nav>
@@ -44,11 +40,11 @@
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="block text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1">Total Pool Value (₹)</label>
-                        <input type="number" id="new-g-pool" placeholder="600000" class="w-full bg-slate-900/60 border border-slate-800/80 p-3 rounded-xl text-sm focus:border-indigo-500 text-white outline-none">
+                        <input type="number" id="new-g-pool" placeholder="600000" class="w-full bg-slate-900/60 border border-slate-800/80 p-3 rounded-xl text-sm text-white outline-none">
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1">Total Members</label>
-                        <input type="number" id="new-g-members" placeholder="20" class="w-full bg-slate-900/60 border border-slate-800/80 p-3 rounded-xl text-sm focus:border-indigo-500 text-white outline-none">
+                        <input type="number" id="new-g-members" placeholder="20" class="w-full bg-slate-900/60 border border-slate-800/80 p-3 rounded-xl text-sm text-white outline-none">
                     </div>
                 </div>
                 <button onclick="createNewChitGroup()" class="w-full bg-indigo-600 text-white font-black py-3.5 rounded-xl text-xs uppercase tracking-widest transition-all">Create Chit Group</button>
@@ -88,7 +84,7 @@
                 <div class="flex flex-col sm:flex-row justify-between sm:items-center border-b border-slate-800/60 pb-3">
                     <div>
                         <h3 class="text-lg font-black text-white">📂 {{ g.name }}</h3>
-                        <p class="text-xs text-slate-400 font-semibold">Value: ₹{{ "{:,}".format(g.total_pool) }} | Size: {{ g.total_members }} Members | <span class="text-indigo-400 font-bold">Month Cycle: {{ g.current_month }}</span></p>
+                        <p class="text-xs text-slate-400 font-semibold">Value: ₹{{ "{:,}".format(g.total_pool) }} | Size: {{ g.total_members }} Members | <span class="text-indigo-400 font-bold" id="month-lbl-{{ g.id }}">Month Cycle: {{ g.current_month }}</span></p>
                     </div>
                     <div class="flex items-center gap-2 mt-2 sm:mt-0">
                         <button onclick="openMembershipModal('{{ g.id }}', '{{ g.name }}')" class="bg-slate-900/80 border border-slate-800 text-indigo-400 text-[10px] font-black px-3 py-1.5 rounded-xl transition-all">👥 Manage Members</button>
@@ -124,12 +120,7 @@
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-800 pb-1">🔨 Session Bidding Trail Log</p>
                     <div id="action-trail-{{ g.id }}" class="space-y-1.5 max-h-32 overflow-y-auto text-xs font-mono text-slate-400 pr-1">
                         <div class="flex flex-col items-center justify-center py-6 space-y-3 placeholder-anim">
-                            <div class="flex items-end gap-1 h-5">
-                                <div class="w-1 bg-indigo-500/40 rounded wave-bar" style="animation-delay: 0.1s"></div>
-                                <div class="w-1 bg-indigo-400/50 rounded wave-bar" style="animation-delay: 0.3s"></div>
-                                <div class="w-1 bg-cyan-400/60 rounded wave-bar" style="animation-delay: 0.5s"></div>
-                            </div>
-                            <p class="text-slate-500 italic tracking-wide text-[11px]">Room dormant. Standing by for interactive bid entries...</p>
+                            <p class="text-slate-500 italic tracking-wide text-[11px]">Room dormant. Standing by...</p>
                         </div>
                     </div>
                 </div>
@@ -151,141 +142,112 @@
                 </div>
 
                 <div class="grid grid-cols-2 gap-2 pt-2">
-                    <button onclick="startChitRoom('{{ g.id }}')" class="bg-slate-800 hover:bg-slate-700 text-white font-black py-2.5 rounded-xl text-xs uppercase tracking-wider border border-slate-700 transition-all active:scale-[0.98]">🚀 Open Room</button>
-                    <button onclick="finalizeChitRoom('{{ g.id }}')" class="bg-rose-600 hover:bg-rose-500 text-white font-black py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all active:scale-[0.98] shadow-lg shadow-rose-900/10">🛑 Freeze & Finalize</button>
+                    <button onclick="roomAction('{{ g.id }}', 'start')" class="bg-slate-800 hover:bg-slate-700 text-white font-black py-2.5 rounded-xl text-xs uppercase tracking-wider border border-slate-700 transition-all">🚀 Open Room</button>
+                    <button onclick="roomAction('{{ g.id }}', 'finalize')" class="bg-rose-600 hover:bg-rose-500 text-white font-black py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all shadow-lg shadow-rose-900/10">🛑 Freeze & Finalize</button>
                 </div>
             </div>
             {% endfor %}
         </div>
     </main>
 
-    <div id="membership-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
-        <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
-            <div class="border-b border-slate-800 pb-2"><h3 class="text-md font-black text-white" id="modal-title">Allocate Group Members</h3></div>
-            <input type="hidden" id="modal-group-id">
-            <div id="modal-user-list" class="space-y-2 max-h-60 overflow-y-auto pr-1"></div>
-            <div class="grid grid-cols-2 gap-2 pt-2 border-t border-slate-800">
-                <button onclick="closeMembershipModal()" class="bg-slate-800 text-white text-xs font-bold py-2.5 rounded-xl border border-slate-700">Cancel</button>
-                <button onclick="saveMembershipAllocation()" class="bg-indigo-600 text-white text-xs font-black py-2.5 rounded-xl">Save Assignment</button>
-            </div>
-        </div>
-    </div>
-
     <script>
-        let socket;
-        // SPEED UPGRADE: Delayed socket initialization to prevent execution-blocking handshakes on load
-        window.addEventListener('DOMContentLoaded', () => {
-            try {
-                socket = io({
-                    transports: ['websocket', 'polling'],
-                    upgrade: true,
-                    rememberUpgrade: true,
-                    timeout: 5000
-                });
-                
-                socket.on('history_updated', async function(data) {
-                    await loadAdminHistory(parseInt(data.group_id));
-                });
-                socket.on('room_opened', function(data) { document.getElementById(`card-node-${data.group_id}`).classList.add('room-active'); });
-                socket.on('bid_broadcast', function(data) { document.getElementById(`bid-val-${data.group_id}`).innerText = "₹" + data.highest_bid.toLocaleString('en-IN'); document.getElementById(`bidder-lbl-${data.group_id}`).innerText = "🏆 " + data.highest_bidder; });
-                socket.on('single_log_append', function(data) {
-                    const container = document.getElementById(`action-trail-${data.group_id}`);
-                    if(container.querySelector('.placeholder-anim')) container.innerHTML = '';
-                    container.insertAdjacentHTML('beforeend', `<div class="flex justify-between bg-slate-900/80 px-3 py-2 rounded-xl border border-slate-800/40 text-[11px]"><span><b>${data.name}</b> +₹${data.increment.toLocaleString('en-IN')}</span><span class="text-emerald-400 font-bold">Total: ₹${data.total.toLocaleString('en-IN')}</span></div>`);
-                    container.scrollTop = container.scrollHeight;
-                });
-
-                document.querySelectorAll('.admin-chit-card').forEach(card => {
-                    const id = card.getAttribute('data-id');
-                    if (id) socket.emit('join_chit_room', { group_id: parseInt(id) });
-                });
-            } catch(e) { console.error(e); }
-        });
-
+        // ON LOAD INITIALIZATION LOOP
         document.querySelectorAll('.admin-chit-card').forEach(card => {
-            const id = card.getAttribute('data-id');
-            if (id) loadAdminHistory(parseInt(id));
+            const id = parseInt(card.getAttribute('data-id'));
+            if (id) {
+                loadAdminHistory(id);
+                // Bidding engine poll initialization loop (Fires every 2 seconds during an active session)
+                setInterval(() => { pollRoomState(id); }, 2000);
+            }
         });
+
+        async function pollRoomState(groupId) {
+            try {
+                const res = await fetch(`/api/chit/room-state/${groupId}`);
+                const data = await res.json();
+                if(!data.success) return;
+                
+                const card = document.getElementById(`card-node-${groupId}`);
+                if(data.is_active) card.classList.add('room-active');
+                else card.classList.remove('room-active');
+                
+                document.getElementById(`bid-val-${groupId}`).innerText = "₹" + data.highest_bid.toLocaleString('en-IN');
+                document.getElementById(`bidder-lbl-${groupId}`).innerText = "🏆 " + data.highest_bidder;
+                document.getElementById(`month-lbl-${groupId}`).innerText = "Month Cycle: " + data.current_month;
+                
+                const trail = document.getElementById(`action-trail-${groupId}`);
+                if(data.bids.length > 0 && trail) {
+                    trail.innerHTML = '';
+                    data.bids.forEach(b => {
+                        trail.insertAdjacentHTML('beforeend', `<div class="flex justify-between bg-slate-900/80 px-3 py-2 rounded-xl border border-slate-800/40 text-[11px]"><span><b>${b.name}</b> +₹${b.increment.toLocaleString('en-IN')}</span><span class="text-emerald-400 font-bold">Total: ₹${b.total.toLocaleString('en-IN')}</span></div>`);
+                    });
+                }
+            } catch(e){}
+        }
+
+        async function roomAction(groupId, action) {
+            await fetch('/api/admin/room-control', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({group_id: groupId, action: action}) });
+            if(action === 'finalize') window.location.reload();
+            else pollRoomState(groupId);
+        }
+
+        async function injectProxyBid(id) {
+            const name = document.getElementById(`proxy-name-${id}`).value;
+            const inc = document.getElementById(`proxy-inc-${id}`).value;
+            await fetch('/api/chit/place-bid', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({group_id: id, increment: parseFloat(inc), proxy_name: name}) });
+            document.getElementById(`proxy-inc-${id}`).value = '';
+            pollRoomState(id);
+        }
 
         async function submitOfflineRecord() {
             const rawGroupId = document.getElementById('seed-group-id').value;
             const month = document.getElementById('seed-month').value;
             const bid = document.getElementById('seed-bid').value;
             const winner = document.getElementById('seed-winner-name').value;
-            
-            if(!month || !bid || !winner) return alert("Please fill out all fields before injecting.");
+            if(!month || !bid || !winner) return alert("Please fill out all fields.");
             const numericGroupId = parseInt(rawGroupId);
 
-            try {
-                const res = await fetch('/api/admin/inject-history', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ group_id: numericGroupId, month: parseInt(month), winning_bid: parseFloat(bid), winner_name: winner.trim() })
-                });
-                if((await res.json()).success) {
-                    alert(`🎉 Month ${month} historical data successfully saved!`);
-                    document.getElementById('seed-month').value = '';
-                    document.getElementById('seed-bid').value = '';
-                    document.getElementById('seed-winner-name').value = '';
-                    await loadAdminHistory(numericGroupId);
-                }
-            } catch (err) { alert("Error connecting to server."); }
+            const res = await fetch('/api/admin/inject-history', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ group_id: numericGroupId, month: parseInt(month), winning_bid: parseFloat(bid), winner_name: winner.trim() }) });
+            if((await res.json()).success) {
+                alert("Saved successfully!");
+                window.location.reload();
+            }
         }
 
-        async function createNewChitGroup() { await fetch('/api/admin/create-group', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name: document.getElementById('new-g-name').value, pool: document.getElementById('new-g-pool').value, members: document.getElementById('new-g-members').value}) }); window.location.reload(); }
-        async function commitSchedule(id) { const d = document.getElementById('date-'+id).value; const t = document.getElementById('time-'+id).value; if(!d || !t) return alert("Select values."); const res = await fetch('/api/admin/schedule-group', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ group_id: parseInt(id), date: d, time: t }) }); if((await res.json()).success) { document.getElementById('sched-lbl-'+id).innerText = `📅 ${d} at ${t}`; alert("Schedule locked."); } }
-        function generateInvite(id, name) { const currentSchedule = document.getElementById('sched-lbl-'+id).innerText; window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`📢 *ChitHub Alert*\n*${name}* is scheduled at *${currentSchedule}*.\n🔗 Link: ${window.location.origin}`)}`, '_blank'); }
-        async function openMembershipModal(groupId, groupName) { document.getElementById('modal-group-id').value = groupId; document.getElementById('modal-title').innerText = `🔒 Access Map: ${groupName}`; const res = await fetch(`/api/admin/group-members/${groupId}`); const data = await res.json(); const container = document.getElementById('modal-user-list'); container.innerHTML = ''; data.users.forEach(u => { container.insertAdjacentHTML('beforeend', `<label class="flex items-center justify-between p-2.5 bg-slate-950 rounded-xl border border-slate-800/60 cursor-pointer text-left"><div class="text-left"><span class="text-xs font-bold text-slate-200 block">${u.name}</span><span class="text-[10px] text-slate-500 font-mono">${u.phone}</span></div><input type="checkbox" value="${u.id}" ${u.is_member ? 'checked' : ''} class="w-4 h-4 rounded text-indigo-600 bg-slate-900 border-slate-700 user-check-node"></label>`); }); document.getElementById('membership-modal').classList.remove('hidden'); }
-        function closeMembershipModal() { document.getElementById('membership-modal').classList.add('hidden'); }
-        async function saveMembershipAllocation() { const groupId = document.getElementById('modal-group-id').value; const userIds = Array.from(document.querySelectorAll('.user-check-node:checked')).map(n => parseInt(n.value)); const res = await fetch('/api/admin/update-membership', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ group_id: groupId, user_ids: userIds }) }); if((await res.json()).success) { alert("Access updated."); closeMembershipModal(); } }
-        function startChitRoom(id) { if (socket) socket.emit('admin_start_room', { group_id: parseInt(id) }); }
-        function finalizeChitRoom(id) { if (socket) socket.emit('admin_finalize_room', { group_id: parseInt(id) }); }
-        function injectProxyBid(id) { if (socket) socket.emit('place_incremental_bid', { group_id: parseInt(id), increment: parseFloat(document.getElementById(`proxy-inc-${id}`).value), proxy_name: document.getElementById(`proxy-name-${id}`).value }); document.getElementById(`proxy-inc-${id}`).value = ''; }
-
         function loadAdminHistory(groupId) {
-            return new Promise(async (resolve) => {
-                try {
-                    const res = await fetch(`/api/chit/history/${groupId}`); 
-                    const result = await res.json();
-                    const tbody = document.getElementById(`admin-ledger-body-${groupId}`);
-                    if (!tbody) return resolve(false);
-                    if (result.success && result.history && result.history.length > 0) {
-                        tbody.innerHTML = '';
-                        result.history.forEach(item => {
-                            tbody.insertAdjacentHTML('beforeend', `
-                                <tr class="hover:bg-slate-900/40 border-b border-slate-800/40 transition-colors group">
-                                    <td class="p-3 text-slate-500 font-mono flex items-center gap-2">
-                                        <button onclick="deleteHistoryRow(${item.id}, ${groupId})" class="text-rose-500 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity font-sans text-xs mr-1" title="Delete Row">🗑️</button>
-                                        Month ${item.month}
-                                    </td>
-                                    <td class="p-3 font-bold text-white">${item.winner || "Historical Record"}</td>
-                                    <td class="p-3 text-center font-mono text-slate-300">₹${Number(item.bid).toLocaleString('en-IN')}</td>
-                                    <td class="p-3 text-center text-emerald-400 font-mono">₹${Number(item.payout).toLocaleString('en-IN')}</td>
-                                    <td class="p-3 text-center text-amber-500 font-mono">₹${Number(item.agent_fee).toLocaleString('en-IN')}</td>
-                                    <td class="p-3 text-center text-cyan-400 font-mono">₹${Number(item.due_non_winner).toLocaleString('en-IN')}</td>
-                                </tr>`);
-                        });
-                    } else {
-                        tbody.innerHTML = '<tr class="placeholder-ledger-row"><td colspan="6" class="text-center p-8 text-slate-500 italic">No cycles closed yet.</td></tr>';
-                    }
-                } catch (err) { console.error(err); }
-                resolve(true);
+            fetch(`/api/chit/history/${groupId}`).then(res => res.json()).then(result => {
+                const tbody = document.getElementById(`admin-ledger-body-${groupId}`);
+                if (result.success && result.history && result.history.length > 0) {
+                    tbody.innerHTML = '';
+                    result.history.forEach(item => {
+                        tbody.insertAdjacentHTML('beforeend', `
+                            <tr class="hover:bg-slate-900/40 border-b border-slate-800/40 transition-colors group">
+                                <td class="p-3 text-slate-500 font-mono flex items-center gap-2">
+                                    <button onclick="deleteHistoryRow(${item.id}, ${groupId})" class="text-rose-500 font-sans text-xs mr-1">🗑️</button>
+                                    Month ${item.month}
+                                </td>
+                                <td class="p-3 font-bold text-white">${item.winner || "Historical Record"}</td>
+                                <td class="p-3 text-center font-mono text-slate-300">₹${Number(item.bid).toLocaleString('en-IN')}</td>
+                                <td class="p-3 text-center text-emerald-400 font-mono">₹${Number(item.payout).toLocaleString('en-IN')}</td>
+                                <td class="p-3 text-center text-amber-500 font-mono">₹${Number(item.agent_fee).toLocaleString('en-IN')}</td>
+                                <td class="p-3 text-center text-cyan-400 font-mono">₹${Number(item.due_non_winner).toLocaleString('en-IN')}</td>
+                            </tr>`);
+                    });
+                }
             });
         }
 
         async function deleteHistoryRow(historyId, groupId) {
-            if (!confirm("Are you sure you want to permanently delete this month's record from the database?")) return;
-            try {
-                const res = await fetch(`/api/admin/delete-history/${historyId}`, { method: 'POST' });
-                if ((await res.json()).success) {
-                    await loadAdminHistory(groupId);
-                    window.location.reload();
-                } else {
-                    alert("Failed to delete record.");
-                }
-            } catch(err) { alert("Error deleting log entry."); }
+            if (confirm("Delete this month's record?")) {
+                await fetch(`/api/admin/delete-history/${historyId}`, { method: 'POST' });
+                window.location.reload();
+            }
         }
-        if (socket) socket.on('room_closed', function() { window.location.reload(); });
+        async function createNewChitGroup() { await fetch('/api/admin/create-group', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name: document.getElementById('new-g-name').value, pool: document.getElementById('new-g-pool').value, members: document.getElementById('new-g-members').value}) }); window.location.reload(); }
+        async function commitSchedule(id) { const d = document.getElementById('date-'+id).value; const t = document.getElementById('time-'+id).value; await fetch('/api/admin/schedule-group', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ group_id: parseInt(id), date: d, time: t }) }); window.location.reload(); }
+        async function openMembershipModal(groupId, groupName) { document.getElementById('modal-group-id').value = groupId; document.getElementById('modal-title').innerText = `🔒 Access Map: ${groupName}`; const res = await fetch(`/api/admin/group-members/${groupId}`); const data = await res.json(); const container = document.getElementById('modal-user-list'); container.innerHTML = ''; data.users.forEach(u => { container.insertAdjacentHTML('beforeend', `<label class="flex items-center justify-between p-2.5 bg-slate-950 rounded-xl border border-slate-800/60 cursor-pointer text-left"><div class="text-left"><span class="text-xs font-bold text-slate-200 block">${u.name}</span><span class="text-[10px] text-slate-500 font-mono">${u.phone}</span></div><input type="checkbox" value="${u.id}" ${u.is_member ? 'checked' : ''} class="w-4 h-4 rounded user-check-node"></label>`); }); document.getElementById('membership-modal').classList.remove('hidden'); }
+        function closeMembershipModal() { document.getElementById('membership-modal').classList.add('hidden'); }
+        async function saveMembershipAllocation() { const groupId = document.getElementById('modal-group-id').value; const checkNodes = document.querySelectorAll('.user-check-node:checked'); const userIds = Array.from(checkNodes).map(node => parseInt(node.value)); await fetch('/api/admin/update-membership', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ group_id: groupId, user_ids: userIds }) }); closeMembershipModal(); }
     </script>
 </body>
 </html>
