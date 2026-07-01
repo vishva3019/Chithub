@@ -238,7 +238,7 @@ def get_group_members(group_id):
     mapped_ids = [m.user_id for m in GroupMembership.query.filter_by(group_id=group_id).all()]
     return jsonify({'success': True, 'users': [{'id': u.id, 'name': u.name, 'phone': u.phone, 'is_member': (u.id in mapped_ids)} for u in all_users]})
 
-@app.route('/api/admin/update-membership', methods=['POST'])
+@app.route('/api/update-membership', methods=['POST'])
 def update_membership():
     if session.get('user_status') != 'admin': return jsonify({'success': False}), 403
     data = request.get_json() or {}
