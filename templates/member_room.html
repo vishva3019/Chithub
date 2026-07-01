@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ChitHub - Member Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="/static/socket.io.js"></script>
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <style>
         .premium-bg {
@@ -13,9 +12,10 @@
             background-image: 
                 radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.08) 0px, transparent 50%),
                 radial-gradient(at 50% 0%, rgba(34, 211, 238, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.06) 0px, transparent 50%),
                 linear-gradient(rgba(255, 255, 255, 0.004) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(255, 255, 255, 0.004) 1px, transparent 1px);
-            background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+            background-size: 100% 100%, 100% 100%, 100% 100%, 32px 32px, 32px 32px;
         }
         @keyframes orbit { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
         @keyframes reverse-orbit { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
@@ -35,11 +35,10 @@
             <h1 class="text-xl font-black bg-gradient-to-r from-indigo-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent tracking-tight">ChitHub</h1>
             <p class="text-xs text-slate-400">Welcome, <span id="profile-name" class="font-bold text-slate-200">{{ user_name }}</span></p>
         </div>
-        <a href="/logout" class="bg-slate-900/80 hover:bg-slate-700 px-4 py-2 border border-slate-800 rounded-xl text-xs font-bold backdrop-blur-sm">Logout Portal</a>
+        <a href="/logout" class="bg-slate-900/80 border border-slate-800 px-4 py-2 rounded-xl text-xs font-bold backdrop-blur-sm">Logout Portal</a>
     </nav>
 
     <main class="max-w-5xl mx-auto p-4 lg:p-6 space-y-8 relative z-10">
-        
         {% if not groups %}
         <div class="bg-slate-950/40 border border-slate-800/80 rounded-3xl p-10 text-center max-w-2xl mx-auto my-12 shadow-2xl space-y-8 relative overflow-hidden backdrop-blur-xl">
             <div class="relative w-48 h-48 mx-auto flex items-center justify-center">
@@ -63,7 +62,6 @@
 
         {% for g in groups %}
         <div class="member-chit-card bg-slate-950/40 border border-slate-800/80 rounded-3xl p-6 shadow-2xl space-y-6 backdrop-blur-xl" data-id="{{ g.id }}">
-            
             <div class="flex justify-between items-start border-b border-slate-800/60 pb-3">
                 <div>
                     <h2 class="text-lg font-black text-white tracking-tight">{{ g.name }}</h2>
@@ -140,41 +138,44 @@
                     </div>
                 </div>
             </div>
-
         </div>
         {% endfor %}
     </main>
 
     <script>
-        const socket = io();
+        let socket;
+        try {
+            socket = io();
+            socket.on('history_updated', function(data) {
+                loadLedgerHistory(parseInt(data.group_id));
+            });
+            socket.on('bid_broadcast', function(data) { document.getElementById(`member-val-${data.group_id}`).innerText = "₹" + data.highest_bid.toLocaleString('en-IN'); document.getElementById(`member-lbl-${data.group_id}`).innerText = "🏆 Standing: " + data.highest_bidder; });
+            socket.on('single_log_append', function(data) { const logContainer = document.getElementById(`live-stream-${data.group_id}`); if(logContainer.querySelector('.member-stream-placeholder')) logContainer.innerHTML = ''; logContainer.insertAdjacentHTML('beforeend', `<div class="flex justify-between bg-slate-950 p-1.5 rounded-lg border border-slate-800/40"><span><b>${data.name}</b> +₹${data.increment}</span><span>₹${data.total}</span></div>`); logContainer.scrollTop = logContainer.scrollHeight; });
+        } catch(e) { console.error(e); }
 
         document.querySelectorAll('.member-chit-card').forEach(card => {
             const id = card.getAttribute('data-id');
-            if (id) { socket.emit('join_chit_room', { group_id: parseInt(id) }); loadLedgerHistory(id); }
+            if (id) { 
+                if (socket) socket.emit('join_chit_room', { group_id: parseInt(id) }); 
+                loadLedgerHistory(parseInt(id)); 
+            }
         });
 
-        // REAL-TIME BROADCAST LISTENER MATRIX FOR USER PORTALS
-        socket.on('history_updated', function(data) {
-            console.log("⚡ Syncing newly added offline history metrics into member layout context...");
-            loadLedgerHistory(data.group_id);
-        });
-
-        socket.on('bid_broadcast', function(data) { document.getElementById(`member-val-${data.group_id}`).innerText = "₹" + data.highest_bid.toLocaleString('en-IN'); document.getElementById(`member-lbl-${data.group_id}`).innerText = "🏆 Standing: " + data.highest_bidder; });
-        socket.on('single_log_append', function(data) { const logContainer = document.getElementById(`live-stream-${data.group_id}`); if(logContainer.querySelector('.member-stream-placeholder')) logContainer.innerHTML = ''; logContainer.insertAdjacentHTML('beforeend', `<div class="flex justify-between bg-slate-950 p-1.5 rounded-lg border border-slate-800/40"><span><b>${data.name}</b> +₹${data.increment}</span><span>₹${data.total}</span></div>`); logContainer.scrollTop = logContainer.scrollHeight; });
-
-        function submitIncrement(groupId, value) { socket.emit('place_incremental_bid', { group_id: parseInt(groupId), increment: parseFloat(value) }); }
+        function submitIncrement(groupId, value) { if(socket) socket.emit('place_incremental_bid', { group_id: parseInt(groupId), increment: parseFloat(value) }); }
         function submitCustomIncrement(groupId) { const f = document.getElementById(`custom-inc-${groupId}`); submitIncrement(groupId, f.value.trim()); f.value = ''; }
 
         async function loadLedgerHistory(groupId) {
-            const res = await fetch(`/api/chit/history/${groupId}`); const result = await res.json();
-            const tbody = document.getElementById(`ledger-body-${groupId}`);
+            const cleanId = parseInt(groupId);
+            const res = await fetch(`/api/chit/history/${cleanId}`); const result = await res.json();
+            const tbody = document.getElementById(`ledger-body-${cleanId}`);
             const myName = document.getElementById('profile-name').innerText.trim();
+            if (!tbody) return;
 
             if (result.success && result.history.length > 0) {
                 tbody.innerHTML = '';
                 const historyWinners = result.history.map(item => item.winner);
                 const latestCycle = result.history[result.history.length - 1];
-                generateSettlementQR(groupId, latestCycle, myName, result.base_installment, historyWinners);
+                generateSettlementQR(cleanId, latestCycle, myName, result.base_installment, historyWinners);
 
                 result.history.forEach(item => {
                     let dueLabel = "";
@@ -182,7 +183,7 @@
                     else if (historyWinners.slice(0, item.month - 1).includes(myName)) { dueLabel = "₹" + result.base_installment.toLocaleString('en-IN') + " (Full)"; }
                     else { dueLabel = "₹" + item.due_non_winner.toLocaleString('en-IN') + " (Discounted)"; }
 
-                    tbody.insertAdjacentHTML('beforeend', `<tr class="hover:bg-slate-900/40 border-b border-slate-800/40"><td class="p-3 text-slate-400 font-mono">Month ${item.month}</td><td class="p-3 text-white font-bold">${item.winner}</td><td class="p-3 text-center font-mono">₹${item.bid.toLocaleString('en-IN')}</td><td class="p-3 text-center text-amber-500 font-mono">₹${item.agent_fee.toLocaleString('en-IN')}</td><td class="p-3 text-center text-teal-400 font-mono">₹${item.dividend_per_head.toLocaleString('en-IN')}</td><td class="p-3 text-center font-mono text-indigo-400">${dueLabel}</td></tr>`);
+                    tbody.insertAdjacentHTML('beforeend', `<tr class="hover:bg-slate-900/40 border-b border-slate-800/40"><td class="p-3 text-slate-400 font-mono">Month ${item.month}</td><td class="p-3 text-white font-bold">${item.winner || "History Entry"}</td><td class="p-3 text-center font-mono">₹${Number(item.bid).toLocaleString('en-IN')}</td><td class="p-3 text-center text-amber-500 font-mono">₹${Number(item.agent_fee).toLocaleString('en-IN')}</td><td class="p-3 text-center text-teal-400 font-mono">₹${Number(item.dividend_per_head).toLocaleString('en-IN')}</td><td class="p-3 text-center font-mono text-indigo-400">${dueLabel}</td></tr>`);
                 });
             }
         }
