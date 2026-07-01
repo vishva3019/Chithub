@@ -8,38 +8,31 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'chithub_multi_group_secure_key_2026'
 
-# VERCEL PRODUCTION DATABASE POOLING OPTIMIZATION
+# VERCEL PRODUCTION DATABASE POOLING OVERRIDES
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
-# Added connection pooling parameters to prevent database connection exhaustion delays
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL or 'sqlite:///chithub_multi.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+
+# SERVERLESS CRITICAL FIX: Optimize engine settings to aggressively recycle and close dead links
 app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
-    "pool_size": 10,
-    "max_overflow": 20,
-    "pool_recycle": 280
+    "pool_pre_ping": True,
+    "pool_recycle": 120,
+    "max_overflow": 0
 }
 
 db = SQLAlchemy(app)
+socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 
-# Optimized SocketIO initialization parameters specifically tailored for serverless platforms
-socketio = SocketIO(
-    app, 
-    cors_allowed_origins="*", 
-    async_mode='eventlet',
-    transports=['websocket', 'polling'],
-    ping_timeout=10,
-    ping_interval=5
-)
-
+SECRET_CHIT_CODE = "GRAMA2026"
 LIVE_BID_LOGS = {} 
 
 # ================= RELATIONAL DATA SCHEMAS =================
 
 class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    id = db.Model.metadata and db.Column(db.Integer, primary_key=True)
     name = db.Column(db.String(100), nullable=False)
     phone = db.Column(db.String(15), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
@@ -72,6 +65,16 @@ class ChitHistory(db.Model):
     payout_to_winner = db.Column(db.Float)
     agent_fee = db.Column(db.Float, default=1000.0)             
     dividend_per_head = db.Column(db.Float, default=0.0)        
+
+# ================= SERVERLESS CONNECTION CLEANUP CRITICAL FIX =================
+
+@app.teardown_appcontext
+def shutdown_session(exception=None):
+    """
+    This block forces Vercel to explicitly close the PostgreSQL session 
+    at the end of every request, instantly freeing up the database pool.
+    """
+    db.session.remove()
 
 # ================= DATABASE INITIALIZATION =================
 
@@ -170,11 +173,6 @@ def inject_history():
             
         db.session.add(h)
         db.session.commit()
-
-        try:
-            socketio.emit('history_updated', {'group_id': g.id}, to=str(g.id))
-        except:
-            pass
         return jsonify({'success': True})
     except Exception as e:
         db.session.rollback()
@@ -197,10 +195,6 @@ def delete_history(history_id):
                 g.current_month = (remaining.month_number + 1) if remaining else 1
                 
             db.session.commit()
-            try:
-                socketio.emit('history_updated', {'group_id': group_id}, to=str(group_id))
-            except:
-                pass
             return jsonify({'success': True, 'group_id': group_id})
         return jsonify({'success': False, 'message': 'Record not found.'}), 404
     except Exception as e:
