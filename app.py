@@ -8,7 +8,7 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'chithub_multi_group_secure_key_2026'
 
-# VERCEL PRODUCTION UPGRADE: Automatically switch to PostgreSQL if deployed, fallback to local SQLite
+# VERCEL PRODUCTION DATABASE ROUTING
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
@@ -156,10 +156,33 @@ def inject_history():
         db.session.add(h)
         db.session.commit()
 
-        # PRODUCTION EVENT UPGRADE: Instantly broadcast real-time updates to Admin and Members
         socketio.emit('history_updated', {'group_id': g.id}, to=str(g.id))
-
         return jsonify({'success': True})
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
+# ================= NEW ENDPOINT: BACKEND DATABASE ROW DELETION TOOL =================
+
+@app.route('/api/admin/delete-history/<int:history_id>', methods=['POST'])
+def delete_history(history_id):
+    if session.get('user_status') != 'admin': return jsonify({'success': False}), 403
+    try:
+        h = ChitHistory.query.get(history_id)
+        if h:
+            group_id = h.group_id
+            db.session.delete(h)
+            
+            # Automatically calculate and shift the active current month block back 
+            remaining = ChitHistory.query.filter_by(group_id=group_id).order_by(ChitHistory.month_number.desc()).first()
+            g = ChitGroup.query.get(group_id)
+            if g:
+                g.current_month = (remaining.month_number + 1) if remaining else 1
+                
+            db.session.commit()
+            socketio.emit('history_updated', {'group_id': group_id}, to=str(group_id))
+            return jsonify({'success': True, 'group_id': group_id})
+        return jsonify({'success': False, 'message': 'Record segment node not found.'}), 404
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
@@ -211,7 +234,11 @@ def update_membership():
 def get_group_history(group_id):
     records = ChitHistory.query.filter_by(group_id=group_id).order_by(ChitHistory.month_number.asc()).all()
     g = ChitGroup.query.get(group_id)
-    return jsonify({'success': True, 'base_installment': (g.total_pool / g.total_members) if g else 0, 'history': [{'month': r.month_number, 'winner': r.winner_name, 'bid': r.winning_bid, 'due_non_winner': r.payable_per_member, 'payout': r.payout_to_winner, 'agent_fee': r.agent_fee, 'dividend_per_head': r.dividend_per_head} for r in records]})
+    return jsonify({
+        'success': True, 
+        'base_installment': (g.total_pool / g.total_members) if g else 0, 
+        'history': [{'id': r.id, 'month': r.month_number, 'winner': r.winner_name, 'bid': r.winning_bid, 'due_non_winner': r.payable_per_member, 'payout': r.payout_to_winner, 'agent_fee': r.agent_fee, 'dividend_per_head': r.dividend_per_head} for r in records]
+    })
 
 @app.route('/logout')
 def logout(): session.clear(); return redirect(url_for('index'))
