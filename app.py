@@ -117,7 +117,7 @@ def login():
     session['user_id'], session['user_name'], session['user_status'] = u.id, u.name, u.status
     return jsonify({'success': True, 'redirect': url_for('dashboard')}), 200
 
-# ================= HISTORICAL OFFLINE DATA DATA SEEDER =================
+# ================= HISTORICAL OFFLINE DATA SEEDER =================
 
 @app.route('/api/admin/inject-history', methods=['POST'])
 def inject_history():
@@ -133,9 +133,8 @@ def inject_history():
         g = ChitGroup.query.get(group_id)
         if not g: return jsonify({'success': False, 'message': 'Group not found.'}), 404
         
-        # Calculate exactly how your family's notebook math works out for previous records
         base_installment = g.total_pool / g.total_members  
-        past_winners_count = month - 1 # Calculates position dynamically
+        past_winners_count = month - 1
         
         dividend_sharing_members = (g.total_members - past_winners_count) - 1 
         AGENT_FIXED_FEE = 1000.0
@@ -151,12 +150,15 @@ def inject_history():
             payout_to_winner=round(final_payout, 2), agent_fee=AGENT_FIXED_FEE, dividend_per_head=round(dividend_discount, 2)
         )
         
-        # Advance group current_month pointer forward to keep pace with inputs
         if month >= g.current_month:
             g.current_month = month + 1
             
         db.session.add(h)
         db.session.commit()
+
+        # PRODUCTION EVENT UPGRADE: Instantly broadcast real-time updates to Admin and Members
+        socketio.emit('history_updated', {'group_id': g.id}, to=str(g.id))
+
         return jsonify({'success': True})
     except Exception as e:
         db.session.rollback()
