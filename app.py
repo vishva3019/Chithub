@@ -82,9 +82,13 @@ def index():
 @app.route('/dashboard')
 def dashboard():
     if 'user_id' not in session: return redirect(url_for('index'))
-    if session.get('user_status') == 'admin':
-        return render_template('multi_admin.html', admin_name=session.get('user_name'), groups=ChitGroup.query.all())
     
+    # 🚀 ADMINISTRATIVE DECK SPEED OPTIMIZATION
+    if session.get('user_status') == 'admin':
+        groups = ChitGroup.query.all()
+        return render_template('multi_admin.html', admin_name=session.get('user_name'), groups=groups)
+    
+    # 🚀 MEMBER DASHBOARD SPEED OPTIMIZATION
     allocated_groups = db.session.query(ChitGroup).join(
         GroupMembership, ChitGroup.id == GroupMembership.group_id
     ).filter(GroupMembership.user_id == session['user_id']).all()
@@ -162,7 +166,7 @@ def inject_history():
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
 
-# ================= NEW ENDPOINT: BACKEND DATABASE ROW DELETION TOOL =================
+# ================= BACKEND DATABASE ROW DELETION TOOL =================
 
 @app.route('/api/admin/delete-history/<int:history_id>', methods=['POST'])
 def delete_history(history_id):
@@ -280,24 +284,48 @@ def handle_inc_bid(data):
 @socketio.on('admin_finalize_room')
 def finalize_room(data):
     if session.get('user_status') != 'admin': return
-    g = ChitGroup.query.get(int(data.get('group_id')))
+    try:
+        group_id = int(data.get('group_id'))
+    except (TypeError, ValueError):
+        return
+
+    g = ChitGroup.query.get(group_id)
     if g and g.is_active:
         g.is_active = False
         base_installment = g.total_pool / g.total_members  
-        past_winners_count = ChitHistory.query.filter_by(group_id=g.id).count()
+        
+        # Speed-optimized scalar query
+        past_winners_count = db.session.query(db.func.count(ChitHistory.id)).filter_by(group_id=g.id).scalar()
+        
         dividend_sharing_members = (g.total_members - past_winners_count) - 1 
         AGENT_FIXED_FEE = 1000.0
         net_dividend_pool = g.highest_bid - AGENT_FIXED_FEE 
+        
         dividend_discount = (net_dividend_pool / dividend_sharing_members) if dividend_sharing_members > 0 else 0.0
         final_due_for_non_winners = base_installment - dividend_discount
         final_payout = g.total_pool - g.highest_bid
 
         try:
-            h = ChitHistory(group_id=g.id, month_number=g.current_month, winner_name=g.highest_bidder_name, winning_bid=g.highest_bid, payable_per_member=round(final_due_for_non_winners, 2), payout_to_winner=round(final_payout, 2), agent_fee=AGENT_FIXED_FEE, dividend_per_head=round(dividend_discount, 2))
-            g.current_month += 1; db.session.add(h); db.session.commit()
-            if str(g.id) in LIVE_BID_LOGS: del LIVE_BID_LOGS[str(g.id)]
-            emit('room_closed', {'group_id': g.id, 'winner': h.winner_name, 'bid': h.winning_bid, 'due_non_winner': h.payable_per_member, 'due_past_winner': round(base_installment, 2), 'payout': h.payout_to_winner, 'agent_fee': AGENT_FIXED_FEE, 'div_discount': round(dividend_discount, 2)}, to=str(g.id))
-        except Exception as e: db.session.rollback(); print(e)
+            h = ChitHistory(
+                group_id=g.id, month_number=g.current_month, winner_name=g.highest_bidder_name,
+                winning_bid=g.highest_bid, payable_per_member=round(final_due_for_non_winners, 2), 
+                payout_to_winner=round(final_payout, 2), agent_fee=AGENT_FIXED_FEE, dividend_per_head=round(dividend_discount, 2)
+            )
+            g.current_month += 1
+            db.session.add(h)
+            db.session.commit()
+            
+            if str(g.id) in LIVE_BID_LOGS: 
+                del LIVE_BID_LOGS[str(g.id)]
+
+            emit('room_closed', {
+                'group_id': g.id, 'winner': h.winner_name, 'bid': h.winning_bid, 
+                'due_non_winner': h.payable_per_member, 'due_past_winner': round(base_installment, 2), 
+                'payout': h.payout_to_winner, 'agent_fee': AGENT_FIXED_FEE, 'div_discount': round(dividend_discount, 2)
+            }, to=str(g.id))
+        except Exception as e:
+            db.session.rollback()
+            print(e)
 
 if __name__ == '__main__':
     socketio.run(app, debug=True, port=5000)
