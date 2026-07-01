@@ -30,7 +30,7 @@
             <h1 class="text-xl font-black bg-gradient-to-r from-indigo-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">ChitHub Admin Command</h1>
             <p class="text-[9px] text-slate-500 font-mono tracking-widest uppercase">Node Security Status: Online</p>
         </div>
-        <a href="/logout" class="bg-slate-900/80 hover:bg-rose-950/60 border border-slate-800 px-4 py-2 rounded-xl text-xs font-bold transition-all backdrop-blur-sm">Logout Console</a>
+        <a href="/logout" class="bg-slate-900/80 border border-slate-800 px-4 py-2 rounded-xl text-xs font-bold transition-all backdrop-blur-sm">Logout Console</a>
     </nav>
 
     <main class="max-w-7xl mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 relative z-10">
@@ -51,7 +51,7 @@
                         <input type="number" id="new-g-members" placeholder="20" class="w-full bg-slate-900/60 border border-slate-800/80 p-3 rounded-xl text-sm focus:border-indigo-500 text-white outline-none">
                     </div>
                 </div>
-                <button onclick="createNewChitGroup()" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black py-3.5 rounded-xl text-xs uppercase tracking-widest transition-all">Create Chit Group</button>
+                <button onclick="createNewChitGroup()" class="w-full bg-indigo-600 text-white font-black py-3.5 rounded-xl text-xs uppercase tracking-widest transition-all">Create Chit Group</button>
             </div>
 
             <div class="bg-slate-950/40 border border-slate-800/60 p-5 rounded-3xl shadow-2xl space-y-4 backdrop-blur-xl">
@@ -91,7 +91,7 @@
                         <p class="text-xs text-slate-400 font-semibold">Value: ₹{{ "{:,}".format(g.total_pool) }} | Size: {{ g.total_members }} Members | <span class="text-indigo-400 font-bold">Month Cycle: {{ g.current_month }}</span></p>
                     </div>
                     <div class="flex items-center gap-2 mt-2 sm:mt-0">
-                        <button onclick="openMembershipModal('{{ g.id }}', '{{ g.name }}')" class="bg-slate-900/80 hover:bg-indigo-950/60 border border-slate-800 text-indigo-400 text-[10px] font-black px-3 py-1.5 rounded-xl transition-all">👥 Manage Members</button>
+                        <button onclick="openMembershipModal('{{ g.id }}', '{{ g.name }}')" class="bg-slate-900/80 border border-slate-800 text-indigo-400 text-[10px] font-black px-3 py-1.5 rounded-xl transition-all">👥 Manage Members</button>
                         <span class="bg-slate-900/80 border border-slate-800 text-slate-300 text-[10px] font-mono px-3 py-1.5 rounded-xl font-bold uppercase" id="sched-lbl-{{ g.id }}">📅 {{ g.scheduled_time }}</span>
                     </div>
                 </div>
@@ -144,7 +144,7 @@
                                 </tr>
                             </thead>
                             <tbody id="admin-ledger-body-{{ g.id }}" class="divide-y divide-slate-800/40 text-slate-300 font-semibold">
-                                <tr class="placeholder-ledger-row"><td colspan="6" class="text-center p-8 text-slate-600 italic">No cycles closed yet.</td></tr>
+                                <tr class="placeholder-ledger-row"><td colspan="6" class="text-center p-8 text-slate-500 italic">No cycles closed yet.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -159,7 +159,6 @@
         </div>
     </main>
 
-    <!-- ASSIGN MEMBERS MODAL -->
     <div id="membership-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
             <div class="border-b border-slate-800 pb-2"><h3 class="text-md font-black text-white" id="modal-title">Allocate Group Members</h3></div>
@@ -174,27 +173,38 @@
 
     <script>
         let socket;
-        try {
-            socket = io();
-            socket.on('history_updated', async function(data) {
-                await loadAdminHistory(parseInt(data.group_id));
-            });
-            socket.on('room_opened', function(data) { document.getElementById(`card-node-${data.group_id}`).classList.add('room-active'); });
-            socket.on('bid_broadcast', function(data) { document.getElementById(`bid-val-${data.group_id}`).innerText = "₹" + data.highest_bid.toLocaleString('en-IN'); document.getElementById(`bidder-lbl-${data.group_id}`).innerText = "🏆 " + data.highest_bidder; });
-            socket.on('single_log_append', function(data) {
-                const container = document.getElementById(`action-trail-${data.group_id}`);
-                if(container.querySelector('.placeholder-anim')) container.innerHTML = '';
-                container.insertAdjacentHTML('beforeend', `<div class="flex justify-between bg-slate-900/80 px-3 py-2 rounded-xl border border-slate-800/40 text-[11px]"><span><b>${data.name}</b> +₹${data.increment.toLocaleString('en-IN')}</span><span class="text-emerald-400 font-bold">Total: ₹${data.total.toLocaleString('en-IN')}</span></div>`);
-                container.scrollTop = container.scrollHeight;
-            });
-        } catch(e) { console.error(e); }
+        // SPEED UPGRADE: Delayed socket initialization to prevent execution-blocking handshakes on load
+        window.addEventListener('DOMContentLoaded', () => {
+            try {
+                socket = io({
+                    transports: ['websocket', 'polling'],
+                    upgrade: true,
+                    rememberUpgrade: true,
+                    timeout: 5000
+                });
+                
+                socket.on('history_updated', async function(data) {
+                    await loadAdminHistory(parseInt(data.group_id));
+                });
+                socket.on('room_opened', function(data) { document.getElementById(`card-node-${data.group_id}`).classList.add('room-active'); });
+                socket.on('bid_broadcast', function(data) { document.getElementById(`bid-val-${data.group_id}`).innerText = "₹" + data.highest_bid.toLocaleString('en-IN'); document.getElementById(`bidder-lbl-${data.group_id}`).innerText = "🏆 " + data.highest_bidder; });
+                socket.on('single_log_append', function(data) {
+                    const container = document.getElementById(`action-trail-${data.group_id}`);
+                    if(container.querySelector('.placeholder-anim')) container.innerHTML = '';
+                    container.insertAdjacentHTML('beforeend', `<div class="flex justify-between bg-slate-900/80 px-3 py-2 rounded-xl border border-slate-800/40 text-[11px]"><span><b>${data.name}</b> +₹${data.increment.toLocaleString('en-IN')}</span><span class="text-emerald-400 font-bold">Total: ₹${data.total.toLocaleString('en-IN')}</span></div>`);
+                    container.scrollTop = container.scrollHeight;
+                });
+
+                document.querySelectorAll('.admin-chit-card').forEach(card => {
+                    const id = card.getAttribute('data-id');
+                    if (id) socket.emit('join_chit_room', { group_id: parseInt(id) });
+                });
+            } catch(e) { console.error(e); }
+        });
 
         document.querySelectorAll('.admin-chit-card').forEach(card => {
             const id = card.getAttribute('data-id');
-            if (id) { 
-                if (socket) socket.emit('join_chit_room', { group_id: parseInt(id) }); 
-                loadAdminHistory(parseInt(id)); 
-            }
+            if (id) loadAdminHistory(parseInt(id));
         });
 
         async function submitOfflineRecord() {
@@ -217,10 +227,7 @@
                     document.getElementById('seed-month').value = '';
                     document.getElementById('seed-bid').value = '';
                     document.getElementById('seed-winner-name').value = '';
-                    
-                    setTimeout(async () => {
-                        await loadAdminHistory(numericGroupId);
-                    }, 400);
+                    await loadAdminHistory(numericGroupId);
                 }
             } catch (err) { alert("Error connecting to server."); }
         }
@@ -233,15 +240,14 @@
         async function saveMembershipAllocation() { const groupId = document.getElementById('modal-group-id').value; const userIds = Array.from(document.querySelectorAll('.user-check-node:checked')).map(n => parseInt(n.value)); const res = await fetch('/api/admin/update-membership', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ group_id: groupId, user_ids: userIds }) }); if((await res.json()).success) { alert("Access updated."); closeMembershipModal(); } }
         function startChitRoom(id) { if (socket) socket.emit('admin_start_room', { group_id: parseInt(id) }); }
         function finalizeChitRoom(id) { if (socket) socket.emit('admin_finalize_room', { group_id: parseInt(id) }); }
-        function injectProxyBid(id) { socket.emit('place_incremental_bid', { group_id: parseInt(id), increment: parseFloat(document.getElementById(`proxy-inc-${id}`).value), proxy_name: document.getElementById(`proxy-name-${id}`).value }); document.getElementById(`proxy-inc-${id}`).value = ''; }
+        function injectProxyBid(id) { if (socket) socket.emit('place_incremental_bid', { group_id: parseInt(id), increment: parseFloat(document.getElementById(`proxy-inc-${id}`).value), proxy_name: document.getElementById(`proxy-name-${id}`).value }); document.getElementById(`proxy-inc-${id}`).value = ''; }
 
         function loadAdminHistory(groupId) {
             return new Promise(async (resolve) => {
                 try {
-                    const cleanId = parseInt(groupId);
-                    const res = await fetch(`/api/chit/history/${cleanId}`); 
+                    const res = await fetch(`/api/chit/history/${groupId}`); 
                     const result = await res.json();
-                    const tbody = document.getElementById(`admin-ledger-body-${cleanId}`);
+                    const tbody = document.getElementById(`admin-ledger-body-${groupId}`);
                     if (!tbody) return resolve(false);
                     if (result.success && result.history && result.history.length > 0) {
                         tbody.innerHTML = '';
@@ -249,7 +255,7 @@
                             tbody.insertAdjacentHTML('beforeend', `
                                 <tr class="hover:bg-slate-900/40 border-b border-slate-800/40 transition-colors group">
                                     <td class="p-3 text-slate-500 font-mono flex items-center gap-2">
-                                        <button onclick="deleteHistoryRow(${item.id}, ${cleanId})" class="text-rose-500 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity font-sans text-xs mr-1" title="Delete Row">🗑️</button>
+                                        <button onclick="deleteHistoryRow(${item.id}, ${groupId})" class="text-rose-500 hover:text-rose-400 opacity-0 group-hover:opacity-100 transition-opacity font-sans text-xs mr-1" title="Delete Row">🗑️</button>
                                         Month ${item.month}
                                     </td>
                                     <td class="p-3 font-bold text-white">${item.winner || "Historical Record"}</td>
@@ -279,7 +285,7 @@
                 }
             } catch(err) { alert("Error deleting log entry."); }
         }
-        socket.on('room_closed', function() { window.location.reload(); });
+        if (socket) socket.on('room_closed', function() { window.location.reload(); });
     </script>
 </body>
 </html>
