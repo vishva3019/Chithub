@@ -144,24 +144,33 @@
 
     <script>
         let socket;
-        try {
-            socket = io();
-            socket.on('history_updated', function(data) {
-                loadLedgerHistory(parseInt(data.group_id));
-            });
-            socket.on('bid_broadcast', function(data) { document.getElementById(`member-val-${data.group_id}`).innerText = "₹" + data.highest_bid.toLocaleString('en-IN'); document.getElementById(`member-lbl-${data.group_id}`).innerText = "🏆 Standing: " + data.highest_bidder; });
-            socket.on('single_log_append', function(data) { const logContainer = document.getElementById(`live-stream-${data.group_id}`); if(logContainer.querySelector('.member-stream-placeholder')) logContainer.innerHTML = ''; logContainer.insertAdjacentHTML('beforeend', `<div class="flex justify-between bg-slate-950 p-1.5 rounded-lg border border-slate-800/40"><span><b>${data.name}</b> +₹${data.increment}</span><span>₹${data.total}</span></div>`); logContainer.scrollTop = logContainer.scrollHeight; });
-        } catch(e) { console.error(e); }
+        // SPEED UPGRADE: Delayed socket pooling overrides initialized sequentially after DOM renders are stable
+        window.addEventListener('DOMContentLoaded', () => {
+            try {
+                socket = io({
+                    transports: ['websocket', 'polling'],
+                    upgrade: true,
+                    rememberUpgrade: true,
+                    timeout: 5000
+                });
+                socket.on('history_updated', function(data) {
+                    loadLedgerHistory(parseInt(data.group_id));
+                });
+                socket.on('bid_broadcast', function(data) { document.getElementById(`member-val-${data.group_id}`).innerText = "₹" + data.highest_bid.toLocaleString('en-IN'); document.getElementById(`member-lbl-${data.group_id}`).innerText = "🏆 Standing: " + data.highest_bidder; });
+                socket.on('single_log_append', function(data) { const logContainer = document.getElementById(`live-stream-${data.group_id}`); if(logContainer.querySelector('.member-stream-placeholder')) logContainer.innerHTML = ''; logContainer.insertAdjacentHTML('beforeend', `<div class="flex justify-between bg-slate-950 p-1.5 rounded-lg border border-slate-800/40"><span><b>${data.name}</b> +₹${data.increment}</span><span>₹${data.total}</span></div>`); logContainer.scrollTop = logContainer.scrollHeight; });
+
+                document.querySelectorAll('.member-chit-card').forEach(card => {
+                    const id = card.getAttribute('data-id');
+                    if (id) socket.emit('join_chit_room', { group_id: parseInt(id) });
+                });
+            } catch(e) { console.error(e); }
+        });
 
         document.querySelectorAll('.member-chit-card').forEach(card => {
             const id = card.getAttribute('data-id');
-            if (id) { 
-                if (socket) socket.emit('join_chit_room', { group_id: parseInt(id) }); 
-                loadLedgerHistory(parseInt(id)); 
-            }
+            if (id) loadLedgerHistory(parseInt(id));
         });
 
-        // INCREMENT BID TRIGGER
         function submitIncrement(groupId, value) { if(socket) socket.emit('place_incremental_bid', { group_id: parseInt(groupId), increment: parseFloat(value) }); }
         function submitCustomIncrement(groupId) { const f = document.getElementById(`custom-inc-${groupId}`); submitIncrement(groupId, f.value.trim()); f.value = ''; }
 
@@ -211,7 +220,7 @@
             qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiString)}" alt="Scan to Pay" class="w-32 h-32 rounded-lg border">`;
             if(titleContainer) titleContainer.innerText = titleText;
         }
-        socket.on('room_closed', function() { window.location.reload(); });
+        if (socket) socket.on('room_closed', function() { window.location.reload(); });
     </script>
 </body>
 </html>
