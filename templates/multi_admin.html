@@ -54,7 +54,7 @@
         <!-- SIDE CONTROLS CONFIGURATION PORTAL -->
         <div class="space-y-6 h-fit">
             <!-- CREATE NEW CHIT GROUP -->
-            <div class="bg-slate-950/40 border border-slate-800/80 p-5 rounded-3xl shadow-2xl space-y-4 backdrop-blur-xl backdrop-saturate-150">
+            <div class="bg-slate-950/40 border border-slate-800/60 p-5 rounded-3xl shadow-2xl space-y-4 backdrop-blur-xl">
                 <h3 class="font-black border-b border-slate-800/60 pb-2 text-indigo-400 flex items-center gap-2">✨ Initialize New Scheme</h3>
                 <div>
                     <label class="block text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1">Chit Book Name</label>
@@ -74,7 +74,7 @@
             </div>
 
             <!-- LOAD OFFLINE HISTORY SEEDER -->
-            <div class="bg-slate-950/40 border border-slate-800/80 p-5 rounded-3xl shadow-2xl space-y-4 backdrop-blur-xl backdrop-saturate-150">
+            <div class="bg-slate-950/40 border border-slate-800/60 p-5 rounded-3xl shadow-2xl space-y-4 backdrop-blur-xl">
                 <h3 class="font-black border-b border-slate-800/60 pb-2 text-amber-500">📥 Load Offline History</h3>
                 <div>
                     <label class="block text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1">Select Active Chit Fund</label>
@@ -105,7 +105,7 @@
         <!-- MAIN MONITOR PANELS -->
         <div class="lg:col-span-2 space-y-6">
             {% for g in groups %}
-            <div class="admin-chit-card interactive-panel bg-slate-950/40 border border-slate-800/80 rounded-3xl p-6 shadow-2xl space-y-4 backdrop-blur-xl backdrop-saturate-150 {% if g.is_active %}room-active{% endif %}" data-id="{{ g.id }}" id="card-node-{{ g.id }}">
+            <div class="admin-chit-card interactive-panel bg-slate-950/40 border border-slate-800/80 rounded-3xl p-6 shadow-2xl space-y-4 {% if g.is_active %}room-active{% endif %}" data-id="{{ g.id }}" id="card-node-{{ g.id }}">
                 <div class="flex flex-col sm:flex-row justify-between sm:items-center border-b border-slate-800/60 pb-3">
                     <div>
                         <h3 class="text-lg font-black text-white tracking-tight">📂 {{ g.name }}</h3>
@@ -117,41 +117,30 @@
                     </div>
                 </div>
 
-                <!-- DATE/TIME INPUT ROW -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-slate-900/40 p-3 rounded-2xl border border-slate-800/50 items-end">
-                    <div>
-                        <label class="block text-[9px] font-bold text-slate-400 uppercase mb-1">Pick Target Date</label>
-                        <input type="date" id="date-{{ g.id }}" class="w-full bg-slate-950/80 border border-slate-800/60 p-2 rounded-xl text-xs text-white outline-none">
-                    </div>
-                    <div>
-                        <label class="block text-[9px] font-bold text-slate-400 uppercase mb-1">Pick Session Time</label>
-                        <input type="time" id="time-{{ g.id }}" class="w-full bg-slate-950/80 border border-slate-800/60 p-2 rounded-xl text-xs text-white outline-none">
-                    </div>
+                    <div><label class="block text-[9px] font-bold text-slate-400 uppercase mb-1">Pick Target Date</label><input type="date" id="date-{{ g.id }}" class="w-full bg-slate-950/80 border border-slate-800/60 p-2 rounded-xl text-xs text-white outline-none"></div>
+                    <div><label class="block text-[9px] font-bold text-slate-400 uppercase mb-1">Pick Session Time</label><input type="time" id="time-{{ g.id }}" class="w-full bg-slate-950/80 border border-slate-800/60 p-2 rounded-xl text-xs text-white outline-none"></div>
                     <div class="grid grid-cols-2 gap-1">
-                        <button onclick="commitSchedule('{{ g.id }}')" class="bg-slate-800 hover:bg-slate-700 text-white text-[10px] font-black p-2.5 rounded-xl border border-slate-700 transition-all">Save</button>
-                        <button onclick="generateInvite('{{ g.id }}', '{{ g.name }}')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black p-2.5 rounded-xl transition-all">WhatsApp</button>
+                        <button onclick="commitSchedule('{{ g.id }}')" class="bg-slate-800 text-white text-[10px] font-black p-2.5 rounded-xl border border-slate-700">Save</button>
+                        <button onclick="generateInvite('{{ g.id }}', '{{ g.name }}')" class="bg-emerald-600 text-white text-[10px] font-black p-2.5 rounded-xl">WhatsApp</button>
                     </div>
                 </div>
 
-                <!-- STANDING DISCOUNT DISPLAY -->
                 <div class="grid grid-cols-1 md:grid-cols-5 gap-4 bg-slate-900/30 p-4 border border-slate-800/50 rounded-2xl">
                     <div class="md:col-span-2 space-y-1 text-center md:text-left flex flex-col justify-center">
                         <p class="text-[10px] uppercase font-black text-slate-500 tracking-wider">Current Running Pool Discount</p>
-                        <h4 class="text-3xl font-black text-emerald-400 tracking-tight transition-all duration-300 scale-100" id="bid-val-{{ g.id }}">₹{{ g.highest_bid }}</h4>
+                        <h4 class="text-3xl font-black text-emerald-400 tracking-tight" id="bid-val-{{ g.id }}">₹{{ g.highest_bid }}</h4>
                         <p class="text-xs text-slate-300 mt-1 bg-slate-950 border border-slate-800/60 px-2.5 py-0.5 rounded-lg w-fit mx-auto md:mx-0 font-semibold shadow-inner" id="bidder-lbl-{{ g.id }}">🏆 {{ g.highest_bidder_name }}</p>
                     </div>
-
                     <div class="md:col-span-3 bg-slate-950/60 border border-slate-800 p-3 rounded-xl space-y-2">
                         <span class="text-[9px] font-black text-indigo-400 uppercase tracking-widest block text-center">Proxy Submission Handle</span>
                         <div class="flex gap-1.5">
-                            <input type="text" id="proxy-name-{{ g.id }}" placeholder="Member Name" class="bg-slate-900 border border-slate-800 px-3 py-2 rounded-xl text-xs w-full text-white outline-none">
-                            <input type="number" id="proxy-inc-{{ g.id }}" placeholder="+1000" class="bg-slate-900 border border-slate-800 px-3 py-2 rounded-xl text-xs w-28 text-center text-emerald-400 font-black outline-none">
-                            <button onclick="injectProxyBid('{{ g.id }}')" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black px-4 rounded-xl active:scale-95 transition-all shadow-md shadow-indigo-600/10">Submit</button>
+                            <input type="text" id="proxy-name-{{ g.id }}" placeholder="Member Name" class="bg-slate-900 border border-slate-800 px-3 py-2 rounded-xl text-xs w-full text-white outline-none"><input type="number" id="proxy-inc-{{ g.id }}" placeholder="+1000" class="bg-slate-900 border border-slate-800 px-3 py-2 rounded-xl text-xs w-28 text-center text-emerald-400 font-black outline-none">
+                            <button onclick="injectProxyBid('{{ g.id }}')" class="bg-indigo-600 text-white text-xs font-black px-4 rounded-xl">Submit</button>
                         </div>
                     </div>
                 </div>
 
-                <!-- ANIMATED BIDDING TRAIL STREAM EMPTY STATE -->
                 <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-3">
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-800 pb-1">🔨 Session Bidding Trail Log</p>
                     <div id="action-trail-{{ g.id }}" class="space-y-1.5 max-h-32 overflow-y-auto text-xs font-mono text-slate-400 pr-1">
@@ -166,7 +155,6 @@
                     </div>
                 </div>
 
-                <!-- HISTORICAL LEDGER SUMMARY -->
                 <div class="bg-slate-900/20 border border-slate-800/80 rounded-2xl overflow-hidden mt-4 shadow-inner">
                     <div class="bg-slate-900/60 px-4 py-2 border-b border-slate-800"><h4 class="text-[11px] font-black uppercase text-slate-300 tracking-wide">📋 Complete Historical Ledger Summary</h4></div>
                     <div class="overflow-x-auto">
@@ -177,7 +165,7 @@
                                 </tr>
                             </thead>
                             <tbody id="admin-ledger-body-{{ g.id }}" class="divide-y divide-slate-800/40 text-slate-300 font-semibold">
-                                <tr class="placeholder-ledger-row"><td colspan="6" class="text-center p-8 text-slate-600 italic">No cycles closed yet.</td></tr>
+                                <tr class="placeholder-ledger-row"><td colspan="6" class="text-center p-8 text-slate-500 italic">No cycles closed yet.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -213,10 +201,10 @@
             if (id) { socket.emit('join_chit_room', { group_id: parseInt(id) }); loadAdminHistory(id); }
         });
 
-        // REAL-TIME BACKGROUND BROADCAST LISTENER
-        socket.on('history_updated', function(data) {
+        // ASYNC SOCKET UPDATER
+        socket.on('history_updated', async function(data) {
             console.log("⚡ Sync caught for group history:", data.group_id);
-            loadAdminHistory(data.group_id);
+            await loadAdminHistory(data.group_id);
         });
 
         socket.on('room_opened', function(data) { document.getElementById(`card-node-${data.group_id}`).classList.add('room-active'); });
@@ -229,7 +217,7 @@
             container.scrollTop = container.scrollHeight;
         });
 
-        // UPGRADED BULLETPROOF OFFLINE INJECTION SYNC HANDLER
+        // STABLE SYNCHRONIZED FOREGROUND SEEDER
         async function submitOfflineRecord() {
             const groupId = document.getElementById('seed-group-id').value;
             const month = document.getElementById('seed-month').value;
@@ -247,7 +235,7 @@
                 const res = await fetch('/api/admin/inject-history', {
                     method: 'POST',
                     headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ group_id: groupId, month: month, winning_bid: bid, winner_name: winner })
+                    body: JSON.stringify({ group_id: groupId, month: parseInt(month), winning_bid: parseFloat(bid), winner_name: winner.trim() })
                 });
                 
                 const result = await res.json();
@@ -259,8 +247,10 @@
                     document.getElementById('seed-bid').value = '';
                     document.getElementById('seed-winner-name').value = '';
 
-                    // DIRECT FOREGROUND INITIATION: Forces local data render right away
-                    loadAdminHistory(groupId); 
+                    // FORCED EXPRESS DELAY CHAIN: Ensures background commits clear fully inside Postgres first
+                    setTimeout(async () => {
+                        await loadAdminHistory(groupId);
+                    }, 400);
                     
                 } else {
                     alert("Error: " + (result.message || "Failed to inject history row."));
@@ -283,15 +273,20 @@
         function finalizeChitRoom(id) { socket.emit('admin_finalize_room', { group_id: parseInt(id) }); }
         function injectProxyBid(id) { socket.emit('place_incremental_bid', { group_id: parseInt(id), increment: parseFloat(document.getElementById(`proxy-inc-${id}`).value), proxy_name: document.getElementById(`proxy-name-${id}`).value }); document.getElementById(`proxy-inc-${id}`).value = ''; }
 
-        async function loadAdminHistory(groupId) {
-            const res = await fetch(`/api/chit/history/${groupId}`); const result = await res.json();
-            const tbody = document.getElementById(`admin-ledger-body-${groupId}`);
-            if (result.success && result.history.length > 0) {
-                tbody.innerHTML = '';
-                result.history.forEach(item => {
-                    tbody.insertAdjacentHTML('beforeend', `<tr class="hover:bg-slate-900/40 border-b border-slate-800/40"><td class="p-3 text-slate-500 font-mono">Month ${item.month}</td><td class="p-3 font-bold text-white">${item.winner}</td><td class="p-3 text-center font-mono">₹${item.bid.toLocaleString('en-IN')}</td><td class="p-3 text-center text-emerald-400 font-mono">₹${item.payout.toLocaleString('en-IN')}</td><td class="p-3 text-center text-amber-500 font-mono">₹${item.agent_fee.toLocaleString('en-IN')}</td><td class="p-3 text-center text-cyan-400 font-mono">₹${item.due_non_winner.toLocaleString('en-IN')}</td></tr>`);
-                });
-            }
+        // EXPLICIT PROMISE MAPPING FOR DATA RENDERS
+        function loadAdminHistory(groupId) {
+            return new Promise(async (resolve) => {
+                const res = await fetch(`/api/chit/history/${groupId}`); 
+                const result = await res.json();
+                const tbody = document.getElementById(`admin-ledger-body-${groupId}`);
+                if (result.success && result.history.length > 0) {
+                    tbody.innerHTML = '';
+                    result.history.forEach(item => {
+                        tbody.insertAdjacentHTML('beforeend', `<tr class="hover:bg-slate-900/40 border-b border-slate-800/40"><td class="p-3 text-slate-500 font-mono">Month ${item.month}</td><td class="p-3 font-bold text-white">${item.winner}</td><td class="p-3 text-center font-mono">₹${item.bid.toLocaleString('en-IN')}</td><td class="p-3 text-center text-emerald-400 font-mono">₹${item.payout.toLocaleString('en-IN')}</td><td class="p-3 text-center text-amber-500 font-mono">₹${item.agent_fee.toLocaleString('en-IN')}</td><td class="p-3 text-center text-cyan-400 font-mono">₹${item.due_non_winner.toLocaleString('en-IN')}</td></tr>`);
+                    });
+                }
+                resolve(true);
+            });
         }
         socket.on('room_closed', function() { window.location.reload(); });
     </script>
