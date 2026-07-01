@@ -7,7 +7,6 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <style>
-        /* Modern Premium Canvas Mesh Backdrop Engine */
         .premium-bg {
             background-color: #0b0f19;
             background-image: 
@@ -18,55 +17,41 @@
                 linear-gradient(90deg, rgba(255, 255, 255, 0.004) 1px, transparent 1px);
             background-size: 100% 100%, 100% 100%, 100% 100%, 32px 32px, 32px 32px;
         }
-        
-        .interactive-panel {
-            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
-        }
-        .room-active {
-            border-color: rgba(34, 211, 238, 0.4) !important;
-            box-shadow: 0 0 35px rgba(34, 211, 238, 0.12), inset 0 0 12px rgba(34, 211, 238, 0.02);
-        }
-        
-        @keyframes soundWave {
-            0%, 100% { transform: scaleY(0.3); }
-            50% { transform: scaleY(1); }
-        }
-        .wave-bar {
-            transform-origin: bottom;
-            animation: soundWave 1.2s ease-in-out infinite;
-        }
+        .interactive-panel { transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
+        .room-active { border-color: rgba(34, 211, 238, 0.4) !important; box-shadow: 0 0 35px rgba(34, 211, 238, 0.12); }
+        @keyframes soundWave { 0%, 100% { transform: scaleY(0.3); } 50% { transform: scaleY(1); } }
+        .wave-bar { transform-origin: bottom; animation: soundWave 1.2s ease-in-out infinite; }
     </style>
 </head>
 <body class="premium-bg text-slate-100 font-sans min-h-screen relative antialiased">
 
     <nav class="bg-slate-950/70 backdrop-blur-md border-b border-slate-800/60 p-4 flex justify-between items-center shadow-lg sticky top-0 z-40">
         <div>
-            <h1 class="text-xl font-black bg-gradient-to-r from-indigo-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent tracking-tight">ChitHub Admin Command</h1>
+            <h1 class="text-xl font-black bg-gradient-to-r from-indigo-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">ChitHub Admin Command</h1>
             <p class="text-[9px] text-slate-500 font-mono tracking-widest uppercase">Node Security Status: Online</p>
         </div>
-        <a href="/logout" class="bg-slate-900/80 hover:bg-rose-950/60 border border-slate-800 hover:border-rose-900/60 px-4 py-2 rounded-xl text-xs font-bold transition-all backdrop-blur-sm">Logout Console</a>
+        <a href="/logout" class="bg-slate-900/80 border border-slate-800 px-4 py-2 rounded-xl text-xs font-bold transition-all backdrop-blur-sm">Logout Console</a>
     </nav>
 
     <main class="max-w-7xl mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 relative z-10">
-        
         <div class="space-y-6 h-fit">
             <div class="bg-slate-950/40 border border-slate-800/60 p-5 rounded-3xl shadow-2xl space-y-4 backdrop-blur-xl">
-                <h3 class="font-black border-b border-slate-800/60 pb-2 text-indigo-400 flex items-center gap-2">✨ Initialize New Scheme</h3>
+                <h3 class="font-black border-b border-slate-800/60 pb-2 text-indigo-400">✨ Initialize New Scheme</h3>
                 <div>
                     <label class="block text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1">Chit Book Name</label>
-                    <input type="text" id="new-g-name" placeholder="e.g. 6 Lakhs Village Loop" class="w-full bg-slate-900/60 border border-slate-800/80 p-3 rounded-xl text-sm focus:border-indigo-500 text-white outline-none transition-all">
+                    <input type="text" id="new-g-name" placeholder="e.g. 6 Lakhs Village Loop" class="w-full bg-slate-900/60 border border-slate-800/80 p-3 rounded-xl text-sm focus:border-indigo-500 text-white outline-none">
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="block text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1">Total Pool Value (₹)</label>
-                        <input type="number" id="new-g-pool" placeholder="600000" class="w-full bg-slate-900/60 border border-slate-800/80 p-3 rounded-xl text-sm focus:border-indigo-500 text-white outline-none transition-all">
+                        <input type="number" id="new-g-pool" placeholder="600000" class="w-full bg-slate-900/60 border border-slate-800/80 p-3 rounded-xl text-sm focus:border-indigo-500 text-white outline-none">
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1">Total Members</label>
-                        <input type="number" id="new-g-members" placeholder="20" class="w-full bg-slate-900/60 border border-slate-800/80 p-3 rounded-xl text-sm focus:border-indigo-500 text-white outline-none transition-all">
+                        <input type="number" id="new-g-members" placeholder="20" class="w-full bg-slate-900/60 border border-slate-800/80 p-3 rounded-xl text-sm focus:border-indigo-500 text-white outline-none">
                     </div>
                 </div>
-                <button onclick="createNewChitGroup()" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black py-3.5 rounded-xl text-xs uppercase tracking-widest shadow-lg shadow-indigo-600/20 transition-all">Create Chit Group</button>
+                <button onclick="createNewChitGroup()" class="w-full bg-indigo-600 text-white font-black py-3.5 rounded-xl text-xs uppercase tracking-widest transition-all">Create Chit Group</button>
             </div>
 
             <div class="bg-slate-950/40 border border-slate-800/60 p-5 rounded-3xl shadow-2xl space-y-4 backdrop-blur-xl">
@@ -86,7 +71,7 @@
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1">Final Bid (Discount)</label>
-                        <input type="number" id="seed-bid" placeholder="150000" class="w-full bg-slate-900 border border-slate-800 p-3 rounded-xl text-xs text-emerald-400 font-black outline-none">
+                        <input type="number" id="seed-bid" placeholder="150000" class="w-full bg-slate-900 border border-slate-800 p-3 rounded-xl text-xs text-emerald-400 font-bold outline-none">
                     </div>
                 </div>
                 <div>
@@ -99,14 +84,14 @@
 
         <div class="lg:col-span-2 space-y-6">
             {% for g in groups %}
-            <div class="admin-chit-card interactive-panel bg-slate-950/40 border border-slate-800/80 rounded-3xl p-6 shadow-2xl space-y-4 backdrop-blur-xl backdrop-saturate-150 {% if g.is_active %}room-active{% endif %}" data-id="{{ g.id }}" id="card-node-{{ g.id }}">
+            <div class="admin-chit-card interactive-panel bg-slate-950/40 border border-slate-800/80 rounded-3xl p-6 shadow-2xl space-y-4 {% if g.is_active %}room-active{% endif %}" data-id="{{ g.id }}" id="card-node-{{ g.id }}">
                 <div class="flex flex-col sm:flex-row justify-between sm:items-center border-b border-slate-800/60 pb-3">
                     <div>
-                        <h3 class="text-lg font-black text-white tracking-tight">📂 {{ g.name }}</h3>
+                        <h3 class="text-lg font-black text-white">📂 {{ g.name }}</h3>
                         <p class="text-xs text-slate-400 font-semibold">Value: ₹{{ "{:,}".format(g.total_pool) }} | Size: {{ g.total_members }} Members | <span class="text-indigo-400 font-bold">Month Cycle: {{ g.current_month }}</span></p>
                     </div>
                     <div class="flex items-center gap-2 mt-2 sm:mt-0">
-                        <button onclick="openMembershipModal('{{ g.id }}', '{{ g.name }}')" class="bg-slate-900/80 hover:bg-indigo-950/60 border border-slate-800 text-indigo-400 text-[10px] font-black px-3 py-1.5 rounded-xl transition-all">👥 Manage Members</button>
+                        <button onclick="openMembershipModal('{{ g.id }}', '{{ g.name }}')" class="bg-slate-900/80 border border-slate-800 text-indigo-400 text-[10px] font-black px-3 py-1.5 rounded-xl transition-all">👥 Manage Members</button>
                         <span class="bg-slate-900/80 border border-slate-800 text-slate-300 text-[10px] font-mono px-3 py-1.5 rounded-xl font-bold uppercase" id="sched-lbl-{{ g.id }}">📅 {{ g.scheduled_time }}</span>
                     </div>
                 </div>
@@ -187,28 +172,21 @@
     </div>
 
     <script>
-        // Secure setup for fallback scenarios
         let socket;
         try {
             socket = io();
-            
             socket.on('history_updated', async function(data) {
-                console.log("⚡ Real-time background sync received for room:", data.group_id);
                 await loadAdminHistory(parseInt(data.group_id));
             });
-
             socket.on('room_opened', function(data) { document.getElementById(`card-node-${data.group_id}`).classList.add('room-active'); });
             socket.on('bid_broadcast', function(data) { document.getElementById(`bid-val-${data.group_id}`).innerText = "₹" + data.highest_bid.toLocaleString('en-IN'); document.getElementById(`bidder-lbl-${data.group_id}`).innerText = "🏆 " + data.highest_bidder; });
-
             socket.on('single_log_append', function(data) {
                 const container = document.getElementById(`action-trail-${data.group_id}`);
                 if(container.querySelector('.placeholder-anim')) container.innerHTML = '';
                 container.insertAdjacentHTML('beforeend', `<div class="flex justify-between bg-slate-900/80 px-3 py-2 rounded-xl border border-slate-800/40 text-[11px]"><span><b>${data.name}</b> +₹${data.increment.toLocaleString('en-IN')}</span><span class="text-emerald-400 font-bold">Total: ₹${data.total.toLocaleString('en-IN')}</span></div>`);
                 container.scrollTop = container.scrollHeight;
             });
-        } catch(e) {
-            console.error("Socket connectivity stream context degradation:", e);
-        }
+        } catch(e) { console.error(e); }
 
         document.querySelectorAll('.admin-chit-card').forEach(card => {
             const id = card.getAttribute('data-id');
@@ -218,7 +196,6 @@
             }
         });
 
-        // SECURE FOREGROUND BACKDOOR SYNCHRONIZER
         async function submitOfflineRecord() {
             const rawGroupId = document.getElementById('seed-group-id').value;
             const month = document.getElementById('seed-month').value;
@@ -226,12 +203,7 @@
             const winner = document.getElementById('seed-winner-name').value;
             
             if(!month || !bid || !winner) return alert("Please fill out all fields before injecting.");
-            
             const numericGroupId = parseInt(rawGroupId);
-            const btn = document.querySelector("button[onclick='submitOfflineRecord()']");
-            const originalText = btn.innerText;
-            btn.innerText = "⏳ Syncing with Database...";
-            btn.disabled = true;
 
             try {
                 const res = await fetch('/api/admin/inject-history', {
@@ -239,28 +211,14 @@
                     headers: {'Content-Type': 'application/json'},
                     body: JSON.stringify({ group_id: numericGroupId, month: parseInt(month), winning_bid: parseFloat(bid), winner_name: winner.trim() })
                 });
-                
-                const result = await res.json();
-                
-                if(result.success) {
+                if((await res.json()).success) {
                     alert(`🎉 Month ${month} historical data successfully saved!`);
-                    
                     document.getElementById('seed-month').value = '';
                     document.getElementById('seed-bid').value = '';
                     document.getElementById('seed-winner-name').value = '';
-
-                    // Forces table load directly into the dashboard context
                     await loadAdminHistory(numericGroupId);
-                    
-                } else {
-                    alert("Error: " + (result.message || "Failed to inject history row."));
                 }
-            } catch (err) {
-                alert("Network connection error syncing with server.");
-            } finally {
-                btn.innerText = originalText;
-                btn.disabled = false;
-            }
+            } catch (err) { alert("Error connecting to server."); }
         }
 
         async function createNewChitGroup() { await fetch('/api/admin/create-group', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name: document.getElementById('new-g-name').value, pool: document.getElementById('new-g-pool').value, members: document.getElementById('new-g-members').value}) }); window.location.reload(); }
@@ -271,50 +229,34 @@
         async function saveMembershipAllocation() { const groupId = document.getElementById('modal-group-id').value; const userIds = Array.from(document.querySelectorAll('.user-check-node:checked')).map(n => parseInt(n.value)); const res = await fetch('/api/admin/update-membership', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ group_id: groupId, user_ids: userIds }) }); if((await res.json()).success) { alert("Access updated."); closeMembershipModal(); } }
         function startChitRoom(id) { if (socket) socket.emit('admin_start_room', { group_id: parseInt(id) }); }
         function finalizeChitRoom(id) { if (socket) socket.emit('admin_finalize_room', { group_id: parseInt(id) }); }
-        function injectProxyBid(id) { if (socket) socket.emit('place_incremental_bid', { group_id: parseInt(id), increment: parseFloat(document.getElementById(`proxy-inc-${id}`).value), proxy_name: document.getElementById(`proxy-name-${id}`).value }); document.getElementById(`proxy-inc-${id}`).value = ''; }
+        function injectProxyBid(id) { socket.emit('place_incremental_bid', { group_id: parseInt(id), increment: parseFloat(document.getElementById(`proxy-inc-${id}`).value), proxy_name: document.getElementById(`proxy-name-${id}`).value }); document.getElementById(`proxy-inc-${id}`).value = ''; }
 
-        // RESILIENT PROMISE RENDERING MODULE
         function loadAdminHistory(groupId) {
             return new Promise(async (resolve) => {
                 try {
-                    const cleanId = parseInt(groupId);
-                    const res = await fetch(`/api/chit/history/${cleanId}`); 
+                    const res = await fetch(`/api/chit/history/${groupId}`); 
                     const result = await res.json();
-                    const tbody = document.getElementById(`admin-ledger-body-${cleanId}`);
-                    
-                    if (!tbody) {
-                        resolve(false);
-                        return;
-                    }
-
+                    const tbody = document.getElementById(`admin-ledger-body-${groupId}`);
+                    if (!tbody) return resolve(false);
                     if (result.success && result.history && result.history.length > 0) {
                         tbody.innerHTML = '';
-                        
                         result.history.forEach(item => {
-                            const displayWinner = item.winner ? item.winner : "Historical Record";
-                            const displayBid = item.bid ? Number(item.bid).toLocaleString('en-IN') : "0";
-                            const displayPayout = item.payout ? Number(item.payout).toLocaleString('en-IN') : "0";
-                            const displayAgent = item.agent_fee ? Number(item.agent_fee).toLocaleString('en-IN') : "1,000";
-                            const displayDue = item.due_non_winner ? Number(item.due_non_winner).toLocaleString('en-IN') : "0";
-
                             tbody.insertAdjacentHTML('beforeend', `
-                                <tr class="hover:bg-slate-900/40 border-b border-slate-800/40 transition-colors">
+                                <tr class="hover:bg-slate-900/40 border-b border-slate-800/40">
                                     <td class="p-3 text-slate-500 font-mono">Month ${item.month}</td>
-                                    <td class="p-3 font-bold text-white">${displayWinner}</td>
-                                    <td class="p-3 text-center font-mono text-slate-300">₹${displayBid}</td>
-                                    <td class="p-3 text-center text-emerald-400 font-mono">₹${displayPayout}</td>
-                                    <td class="p-3 text-center text-amber-500 font-mono">₹${displayAgent}</td>
-                                    <td class="p-3 text-center text-cyan-400 font-mono">₹${displayDue}</td>
-                                </tr>
-                            `);
+                                    <td class="p-3 font-bold text-white">${item.winner || "Historical Record"}</td>
+                                    <td class="p-3 text-center font-mono text-slate-300">₹${Number(item.bid).toLocaleString('en-IN')}</td>
+                                    <td class="p-3 text-center text-emerald-400 font-mono">₹${Number(item.payout).toLocaleString('en-IN')}</td>
+                                    <td class="p-3 text-center text-amber-500 font-mono">₹${Number(item.agent_fee).toLocaleString('en-IN')}</td>
+                                    <td class="p-3 text-center text-cyan-400 font-mono">₹${Number(item.due_non_winner).toLocaleString('en-IN')}</td>
+                                </tr>`);
                         });
                     }
-                } catch (err) {
-                    console.error("❌ Exception processing history data render lines:", err);
-                }
+                } catch (err) { console.error(err); }
                 resolve(true);
             });
         }
+        socket.on('room_closed', function() { window.location.reload(); });
     </script>
 </body>
 </html>
