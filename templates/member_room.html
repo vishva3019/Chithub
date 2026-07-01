@@ -161,6 +161,7 @@
             }
         });
 
+        // INCREMENT BID TRIGGER
         function submitIncrement(groupId, value) { if(socket) socket.emit('place_incremental_bid', { group_id: parseInt(groupId), increment: parseFloat(value) }); }
         function submitCustomIncrement(groupId) { const f = document.getElementById(`custom-inc-${groupId}`); submitIncrement(groupId, f.value.trim()); f.value = ''; }
 
@@ -185,6 +186,8 @@
 
                     tbody.insertAdjacentHTML('beforeend', `<tr class="hover:bg-slate-900/40 border-b border-slate-800/40"><td class="p-3 text-slate-400 font-mono">Month ${item.month}</td><td class="p-3 text-white font-bold">${item.winner || "History Entry"}</td><td class="p-3 text-center font-mono">₹${Number(item.bid).toLocaleString('en-IN')}</td><td class="p-3 text-center text-amber-500 font-mono">₹${Number(item.agent_fee).toLocaleString('en-IN')}</td><td class="p-3 text-center text-teal-400 font-mono">₹${Number(item.dividend_per_head).toLocaleString('en-IN')}</td><td class="p-3 text-center font-mono text-indigo-400">${dueLabel}</td></tr>`);
                 });
+            } else {
+                tbody.innerHTML = '<tr class="member-ledger-placeholder"><td colspan="6" class="text-center p-8 text-slate-600 italic font-mono">No cycles closed yet.</td></tr>';
             }
         }
 
@@ -196,11 +199,17 @@
 
             const qrContainer = document.getElementById(`qr-container-${groupId}`);
             const titleContainer = document.getElementById(`qr-title-${groupId}`);
-            if(!qrContainer || targetAmount === 0) { if(titleContainer && targetAmount === 0) titleContainer.innerText = titleText; return; }
+            if(!qrContainer) return;
+            
+            if (targetAmount === 0) {
+                qrContainer.innerHTML = `<div class="w-32 h-32 flex flex-col items-center justify-center text-[10px] text-slate-400 italic font-sans p-2 bg-slate-50 border rounded-lg border-dashed border-slate-200"><span class="text-lg mb-1">✅</span><span>Settled / Won</span></div>`;
+                if(titleContainer) titleContainer.innerText = titleText;
+                return;
+            }
 
             const upiString = `upi://pay?pa=9686193049@slc&pn=ChitFundsOrganizer&am=${targetAmount}&cu=INR&tn=Chit_Month_${cycle.month}`;
             qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiString)}" alt="Scan to Pay" class="w-32 h-32 rounded-lg border">`;
-            titleContainer.innerText = titleText;
+            if(titleContainer) titleContainer.innerText = titleText;
         }
         socket.on('room_closed', function() { window.location.reload(); });
     </script>
