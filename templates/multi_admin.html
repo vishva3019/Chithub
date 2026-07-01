@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ChitHub - Organizer Core</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="/static/socket.io.js"></script>
+    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <style>
         /* Modern Premium Canvas Mesh Backdrop Engine */
         .premium-bg {
@@ -19,7 +19,6 @@
             background-size: 100% 100%, 100% 100%, 100% 100%, 32px 32px, 32px 32px;
         }
         
-        /* Smooth scale transitions for active cards */
         .interactive-panel {
             transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
         }
@@ -28,7 +27,6 @@
             box-shadow: 0 0 35px rgba(34, 211, 238, 0.12), inset 0 0 12px rgba(34, 211, 238, 0.02);
         }
         
-        /* Custom smooth audio-wave style pulse lines */
         @keyframes soundWave {
             0%, 100% { transform: scaleY(0.3); }
             50% { transform: scaleY(1); }
@@ -88,7 +86,7 @@
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1">Final Bid (Discount)</label>
-                        <input type="number" id="seed-bid" placeholder="150000" class="w-full bg-slate-900 border border-slate-800 p-3 rounded-xl text-xs text-emerald-400 font-bold outline-none">
+                        <input type="number" id="seed-bid" placeholder="150000" class="w-full bg-slate-900 border border-slate-800 p-3 rounded-xl text-xs text-emerald-400 font-black outline-none">
                     </div>
                 </div>
                 <div>
@@ -161,7 +159,7 @@
                                 </tr>
                             </thead>
                             <tbody id="admin-ledger-body-{{ g.id }}" class="divide-y divide-slate-800/40 text-slate-300 font-semibold">
-                                <tr class="placeholder-ledger-row"><td colspan="6" class="text-center p-8 text-slate-600 italic">No cycles closed yet.</td></tr>
+                                <tr class="placeholder-ledger-row"><td colspan="6" class="text-center p-8 text-slate-500 italic">No cycles closed yet.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -189,32 +187,38 @@
     </div>
 
     <script>
-        const socket = io();
+        // Secure setup for fallback scenarios
+        let socket;
+        try {
+            socket = io();
+            
+            socket.on('history_updated', async function(data) {
+                console.log("⚡ Real-time background sync received for room:", data.group_id);
+                await loadAdminHistory(parseInt(data.group_id));
+            });
+
+            socket.on('room_opened', function(data) { document.getElementById(`card-node-${data.group_id}`).classList.add('room-active'); });
+            socket.on('bid_broadcast', function(data) { document.getElementById(`bid-val-${data.group_id}`).innerText = "₹" + data.highest_bid.toLocaleString('en-IN'); document.getElementById(`bidder-lbl-${data.group_id}`).innerText = "🏆 " + data.highest_bidder; });
+
+            socket.on('single_log_append', function(data) {
+                const container = document.getElementById(`action-trail-${data.group_id}`);
+                if(container.querySelector('.placeholder-anim')) container.innerHTML = '';
+                container.insertAdjacentHTML('beforeend', `<div class="flex justify-between bg-slate-900/80 px-3 py-2 rounded-xl border border-slate-800/40 text-[11px]"><span><b>${data.name}</b> +₹${data.increment.toLocaleString('en-IN')}</span><span class="text-emerald-400 font-bold">Total: ₹${data.total.toLocaleString('en-IN')}</span></div>`);
+                container.scrollTop = container.scrollHeight;
+            });
+        } catch(e) {
+            console.error("Socket connectivity stream context degradation:", e);
+        }
 
         document.querySelectorAll('.admin-chit-card').forEach(card => {
             const id = card.getAttribute('data-id');
             if (id) { 
-                socket.emit('join_chit_room', { group_id: parseInt(id) }); 
+                if (socket) socket.emit('join_chit_room', { group_id: parseInt(id) }); 
                 loadAdminHistory(parseInt(id)); 
             }
         });
 
-        socket.on('history_updated', async function(data) {
-            console.log("⚡ Sync caught for group history:", data.group_id);
-            await loadAdminHistory(parseInt(data.group_id));
-        });
-
-        socket.on('room_opened', function(data) { document.getElementById(`card-node-${data.group_id}`).classList.add('room-active'); });
-        socket.on('bid_broadcast', function(data) { document.getElementById(`bid-val-${data.group_id}`).innerText = "₹" + data.highest_bid.toLocaleString('en-IN'); document.getElementById(`bidder-lbl-${data.group_id}`).innerText = "🏆 " + data.highest_bidder; });
-
-        socket.on('single_log_append', function(data) {
-            const container = document.getElementById(`action-trail-${data.group_id}`);
-            if(container.querySelector('.placeholder-anim')) container.innerHTML = '';
-            container.insertAdjacentHTML('beforeend', `<div class="flex justify-between bg-slate-900/80 px-3 py-2 rounded-xl border border-slate-800/40 text-[11px]"><span><b>${data.name}</b> +₹${data.increment.toLocaleString('en-IN')}</span><span class="text-emerald-400 font-bold">Total: ₹${data.total.toLocaleString('en-IN')}</span></div>`);
-            container.scrollTop = container.scrollHeight;
-        });
-
-        // FIXED SUBMISSION ENGINE WITH INTEGER ID PARSING
+        // SECURE FOREGROUND BACKDOOR SYNCHRONIZER
         async function submitOfflineRecord() {
             const rawGroupId = document.getElementById('seed-group-id').value;
             const month = document.getElementById('seed-month').value;
@@ -245,7 +249,7 @@
                     document.getElementById('seed-bid').value = '';
                     document.getElementById('seed-winner-name').value = '';
 
-                    // Forces a clean table load immediately using the correct integer format
+                    // Forces table load directly into the dashboard context
                     await loadAdminHistory(numericGroupId);
                     
                 } else {
@@ -260,16 +264,16 @@
         }
 
         async function createNewChitGroup() { await fetch('/api/admin/create-group', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({name: document.getElementById('new-g-name').value, pool: document.getElementById('new-g-pool').value, members: document.getElementById('new-g-members').value}) }); window.location.reload(); }
-        async function commitSchedule(id) { const d = document.getElementById(`date-${id}`).value; const t = document.getElementById(`time-${id}`).value; if(!d || !t) return alert("Select values."); const res = await fetch('/api/admin/schedule-group', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ group_id: parseInt(id), date: d, time: t }) }); if((await res.json()).success) { document.getElementById(`sched-lbl-${id}`).innerText = `📅 ${d} at ${t}`; alert("Schedule locked."); } }
-        function generateInvite(id, name) { window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`📢 *ChitHub Alert*\n*${name}* is scheduled.\n🔗 Link: ${window.location.origin}`)}`, '_blank'); }
+        async function commitSchedule(id) { const d = document.getElementById('date-'+id).value; const t = document.getElementById('time-'+id).value; if(!d || !t) return alert("Select values."); const res = await fetch('/api/admin/schedule-group', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ group_id: parseInt(id), date: d, time: t }) }); if((await res.json()).success) { document.getElementById('sched-lbl-'+id).innerText = `📅 ${d} at ${t}`; alert("Schedule locked."); } }
+        function generateInvite(id, name) { const currentSchedule = document.getElementById('sched-lbl-'+id).innerText; window.open(`https://api.whatsapp.com/send?text=${encodeURIComponent(`📢 *ChitHub Alert*\n*${name}* is scheduled at *${currentSchedule}*.\n🔗 Link: ${window.location.origin}`)}`, '_blank'); }
         async function openMembershipModal(groupId, groupName) { document.getElementById('modal-group-id').value = groupId; document.getElementById('modal-title').innerText = `🔒 Access Map: ${groupName}`; const res = await fetch(`/api/admin/group-members/${groupId}`); const data = await res.json(); const container = document.getElementById('modal-user-list'); container.innerHTML = ''; data.users.forEach(u => { container.insertAdjacentHTML('beforeend', `<label class="flex items-center justify-between p-2.5 bg-slate-950 rounded-xl border border-slate-800/60 cursor-pointer text-left"><div class="text-left"><span class="text-xs font-bold text-slate-200 block">${u.name}</span><span class="text-[10px] text-slate-500 font-mono">${u.phone}</span></div><input type="checkbox" value="${u.id}" ${u.is_member ? 'checked' : ''} class="w-4 h-4 rounded text-indigo-600 bg-slate-900 border-slate-700 user-check-node"></label>`); }); document.getElementById('membership-modal').classList.remove('hidden'); }
         function closeMembershipModal() { document.getElementById('membership-modal').classList.add('hidden'); }
-        async function saveMembershipAllocation() { const groupId = document.getElementById('modal-group-id').value; const userIds = Array.from(document.querySelectorAll('.user-check-node:checked')).map(n => parseInt(n.value)); const res = await fetch('/api/admin/update-membership', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ group_id: groupId, user_ids: userIds }) }); if((await res.json()).success) { alert("Access updated."); closeMembershipAllocation(); } }
-        function startChitRoom(id) { socket.emit('admin_start_room', { group_id: parseInt(id) }); }
-        function finalizeChitRoom(id) { socket.emit('admin_finalize_room', { group_id: parseInt(id) }); }
-        function injectProxyBid(id) { socket.emit('place_incremental_bid', { group_id: parseInt(id), increment: parseFloat(document.getElementById(`proxy-inc-${id}`).value), proxy_name: document.getElementById(`proxy-name-${id}`).value }); document.getElementById(`proxy-inc-${id}`).value = ''; }
+        async function saveMembershipAllocation() { const groupId = document.getElementById('modal-group-id').value; const userIds = Array.from(document.querySelectorAll('.user-check-node:checked')).map(n => parseInt(n.value)); const res = await fetch('/api/admin/update-membership', { method: 'POST', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ group_id: groupId, user_ids: userIds }) }); if((await res.json()).success) { alert("Access updated."); closeMembershipModal(); } }
+        function startChitRoom(id) { if (socket) socket.emit('admin_start_room', { group_id: parseInt(id) }); }
+        function finalizeChitRoom(id) { if (socket) socket.emit('admin_finalize_room', { group_id: parseInt(id) }); }
+        function injectProxyBid(id) { if (socket) socket.emit('place_incremental_bid', { group_id: parseInt(id), increment: parseFloat(document.getElementById(`proxy-inc-${id}`).value), proxy_name: document.getElementById(`proxy-name-${id}`).value }); document.getElementById(`proxy-inc-${id}`).value = ''; }
 
-        // EXPLICIT PROMISE MAPPING WITH PARSING TYPE RESILIENCE
+        // RESILIENT PROMISE RENDERING MODULE
         function loadAdminHistory(groupId) {
             return new Promise(async (resolve) => {
                 try {
@@ -311,7 +315,6 @@
                 resolve(true);
             });
         }
-        socket.on('room_closed', function() { window.location.reload(); });
     </script>
 </body>
 </html>
