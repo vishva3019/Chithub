@@ -7,53 +7,74 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/static/socket.io.js"></script>
     <style>
+        /* Modern Premium Canvas Mesh Backdrop Engine */
         .premium-bg {
             background-color: #0b0f19;
             background-image: 
                 radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.08) 0px, transparent 50%),
                 radial-gradient(at 50% 0%, rgba(34, 211, 238, 0.05) 0px, transparent 50%),
+                radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.06) 0px, transparent 50%),
                 linear-gradient(rgba(255, 255, 255, 0.004) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(255, 255, 255, 0.004) 1px, transparent 1px);
-            background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+            background-size: 100% 100%, 100% 100%, 100% 100%, 32px 32px, 32px 32px;
         }
-        .interactive-panel { transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1); }
-        .room-active { border-color: rgba(34, 211, 238, 0.4) !important; box-shadow: 0 0 35px rgba(34, 211, 238, 0.12); }
-        @keyframes soundWave { 0%, 100% { transform: scaleY(0.3); } 50% { transform: scaleY(1); } }
-        .wave-bar { transform-origin: bottom; animation: soundWave 1.2s ease-in-out infinite; }
+        
+        /* Smooth scale transitions for active cards */
+        .interactive-panel {
+            transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .room-active {
+            border-color: rgba(34, 211, 238, 0.4) !important;
+            box-shadow: 0 0 35px rgba(34, 211, 238, 0.12), inset 0 0 12px rgba(34, 211, 238, 0.02);
+        }
+        
+        /* Custom smooth audio-wave style pulse lines */
+        @keyframes soundWave {
+            0%, 100% { transform: scaleY(0.3); }
+            50% { transform: scaleY(1); }
+        }
+        .wave-bar {
+            transform-origin: bottom;
+            animation: soundWave 1.2s ease-in-out infinite;
+        }
     </style>
 </head>
 <body class="premium-bg text-slate-100 font-sans min-h-screen relative antialiased">
 
     <nav class="bg-slate-950/70 backdrop-blur-md border-b border-slate-800/60 p-4 flex justify-between items-center shadow-lg sticky top-0 z-40">
         <div>
-            <h1 class="text-xl font-black bg-gradient-to-r from-indigo-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent">ChitHub Admin Command</h1>
+            <h1 class="text-xl font-black bg-gradient-to-r from-indigo-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent tracking-tight">ChitHub Admin Command</h1>
             <p class="text-[9px] text-slate-500 font-mono tracking-widest uppercase">Node Security Status: Online</p>
         </div>
-        <a href="/logout" class="bg-slate-900/80 border border-slate-800 px-4 py-2 rounded-xl text-xs font-bold backdrop-blur-sm">Logout Console</a>
+        <a href="/logout" class="bg-slate-900/80 hover:bg-rose-950/60 border border-slate-800 hover:border-rose-900/60 px-4 py-2 rounded-xl text-xs font-bold transition-all backdrop-blur-sm">Logout Console</a>
     </nav>
 
     <main class="max-w-7xl mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 relative z-10">
+        
+        <!-- SIDE CONTROLS CONFIGURATION PORTAL -->
         <div class="space-y-6 h-fit">
-            <div class="bg-slate-950/40 border border-slate-800/60 p-5 rounded-3xl shadow-2xl space-y-4 backdrop-blur-xl">
-                <h3 class="font-black border-b border-slate-800/60 pb-2 text-indigo-400">✨ Initialize New Scheme</h3>
+            <!-- CREATE NEW CHIT GROUP -->
+            <div class="bg-slate-950/40 border border-slate-800/80 p-5 rounded-3xl shadow-2xl space-y-4 backdrop-blur-xl backdrop-saturate-150">
+                <h3 class="font-black border-b border-slate-800/60 pb-2 text-indigo-400 flex items-center gap-2">✨ Initialize New Scheme</h3>
                 <div>
                     <label class="block text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1">Chit Book Name</label>
-                    <input type="text" id="new-g-name" placeholder="e.g. 6 Lakhs Village Loop" class="w-full bg-slate-900/60 border border-slate-800/80 p-3 rounded-xl text-sm focus:border-indigo-500 text-white outline-none">
+                    <input type="text" id="new-g-name" placeholder="e.g. 6 Lakhs Village Loop" class="w-full bg-slate-900/60 border border-slate-800/80 p-3 rounded-xl text-sm focus:border-indigo-500 text-white outline-none transition-all">
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
                         <label class="block text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1">Total Pool Value (₹)</label>
-                        <input type="number" id="new-g-pool" placeholder="600000" class="w-full bg-slate-900/60 border border-slate-800/80 p-3 rounded-xl text-sm focus:border-indigo-500 text-white outline-none">
+                        <input type="number" id="new-g-pool" placeholder="600000" class="w-full bg-slate-900/60 border border-slate-800/80 p-3 rounded-xl text-sm focus:border-indigo-500 text-white outline-none transition-all">
                     </div>
                     <div>
                         <label class="block text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1">Total Members</label>
-                        <input type="number" id="new-g-members" placeholder="20" class="w-full bg-slate-900/60 border border-slate-800/80 p-3 rounded-xl text-sm focus:border-indigo-500 text-white outline-none">
+                        <input type="number" id="new-g-members" placeholder="20" class="w-full bg-slate-900/60 border border-slate-800/80 p-3 rounded-xl text-sm focus:border-indigo-500 text-white outline-none transition-all">
                     </div>
                 </div>
-                <button onclick="createNewChitGroup()" class="w-full bg-indigo-600 text-white font-black py-3 rounded-xl text-xs uppercase tracking-widest transition-all">Create Chit Group</button>
+                <button onclick="createNewChitGroup()" class="w-full bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-500 hover:to-purple-500 text-white font-black py-3.5 rounded-xl text-xs uppercase tracking-widest shadow-lg shadow-indigo-600/20 transition-all">Create Chit Group</button>
             </div>
 
-            <div class="bg-slate-950/40 border border-slate-800/60 p-5 rounded-3xl shadow-2xl space-y-4 backdrop-blur-xl">
+            <!-- LOAD OFFLINE HISTORY SEEDER -->
+            <div class="bg-slate-950/40 border border-slate-800/80 p-5 rounded-3xl shadow-2xl space-y-4 backdrop-blur-xl backdrop-saturate-150">
                 <h3 class="font-black border-b border-slate-800/60 pb-2 text-amber-500">📥 Load Offline History</h3>
                 <div>
                     <label class="block text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1">Select Active Chit Fund</label>
@@ -81,44 +102,56 @@
             </div>
         </div>
 
+        <!-- MAIN MONITOR PANELS -->
         <div class="lg:col-span-2 space-y-6">
             {% for g in groups %}
-            <div class="admin-chit-card interactive-panel bg-slate-950/40 border border-slate-800/80 rounded-3xl p-6 shadow-2xl space-y-4 {% if g.is_active %}room-active{% endif %}" data-id="{{ g.id }}" id="card-node-{{ g.id }}">
+            <div class="admin-chit-card interactive-panel bg-slate-950/40 border border-slate-800/80 rounded-3xl p-6 shadow-2xl space-y-4 backdrop-blur-xl backdrop-saturate-150 {% if g.is_active %}room-active{% endif %}" data-id="{{ g.id }}" id="card-node-{{ g.id }}">
                 <div class="flex flex-col sm:flex-row justify-between sm:items-center border-b border-slate-800/60 pb-3">
                     <div>
                         <h3 class="text-lg font-black text-white tracking-tight">📂 {{ g.name }}</h3>
                         <p class="text-xs text-slate-400 font-semibold">Value: ₹{{ "{:,}".format(g.total_pool) }} | Size: {{ g.total_members }} Members | <span class="text-indigo-400 font-bold">Month Cycle: {{ g.current_month }}</span></p>
                     </div>
                     <div class="flex items-center gap-2 mt-2 sm:mt-0">
-                        <button onclick="openMembershipModal('{{ g.id }}', '{{ g.name }}')" class="bg-slate-900/80 border border-slate-800 text-indigo-400 text-[10px] font-black px-3 py-1.5 rounded-xl">👥 Manage Members</button>
+                        <button onclick="openMembershipModal('{{ g.id }}', '{{ g.name }}')" class="bg-slate-900/80 hover:bg-indigo-950/60 border border-slate-800 text-indigo-400 text-[10px] font-black px-3 py-1.5 rounded-xl transition-all">👥 Manage Members</button>
                         <span class="bg-slate-900/80 border border-slate-800 text-slate-300 text-[10px] font-mono px-3 py-1.5 rounded-xl font-bold uppercase" id="sched-lbl-{{ g.id }}">📅 {{ g.scheduled_time }}</span>
                     </div>
                 </div>
 
+                <!-- DATE/TIME INPUT ROW -->
                 <div class="grid grid-cols-1 sm:grid-cols-3 gap-2 bg-slate-900/40 p-3 rounded-2xl border border-slate-800/50 items-end">
-                    <div><label class="block text-[9px] font-bold text-slate-400 uppercase mb-1">Pick Target Date</label><input type="date" id="date-{{ g.id }}" class="w-full bg-slate-950/80 border border-slate-800/60 p-2 rounded-xl text-xs text-white outline-none"></div>
-                    <div><label class="block text-[9px] font-bold text-slate-400 uppercase mb-1">Pick Session Time</label><input type="time" id="time-{{ g.id }}" class="w-full bg-slate-950/80 border border-slate-800/60 p-2 rounded-xl text-xs text-white outline-none"></div>
+                    <div>
+                        <label class="block text-[9px] font-bold text-slate-400 uppercase mb-1">Pick Target Date</label>
+                        <input type="date" id="date-{{ g.id }}" class="w-full bg-slate-950/80 border border-slate-800/60 p-2 rounded-xl text-xs text-white outline-none">
+                    </div>
+                    <div>
+                        <label class="block text-[9px] font-bold text-slate-400 uppercase mb-1">Pick Session Time</label>
+                        <input type="time" id="time-{{ g.id }}" class="w-full bg-slate-950/80 border border-slate-800/60 p-2 rounded-xl text-xs text-white outline-none">
+                    </div>
                     <div class="grid grid-cols-2 gap-1">
-                        <button onclick="commitSchedule('{{ g.id }}')" class="bg-slate-800 text-white text-[10px] font-black p-2.5 rounded-xl border border-slate-700">Save</button>
-                        <button onclick="generateInvite('{{ g.id }}', '{{ g.name }}')" class="bg-emerald-600 text-white text-[10px] font-black p-2.5 rounded-xl">WhatsApp</button>
+                        <button onclick="commitSchedule('{{ g.id }}')" class="bg-slate-800 hover:bg-slate-700 text-white text-[10px] font-black p-2.5 rounded-xl border border-slate-700 transition-all">Save</button>
+                        <button onclick="generateInvite('{{ g.id }}', '{{ g.name }}')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-[10px] font-black p-2.5 rounded-xl transition-all">WhatsApp</button>
                     </div>
                 </div>
 
+                <!-- STANDING DISCOUNT DISPLAY -->
                 <div class="grid grid-cols-1 md:grid-cols-5 gap-4 bg-slate-900/30 p-4 border border-slate-800/50 rounded-2xl">
                     <div class="md:col-span-2 space-y-1 text-center md:text-left flex flex-col justify-center">
                         <p class="text-[10px] uppercase font-black text-slate-500 tracking-wider">Current Running Pool Discount</p>
-                        <h4 class="text-3xl font-black text-emerald-400 tracking-tight" id="bid-val-{{ g.id }}">₹{{ g.highest_bid }}</h4>
-                        <p class="text-xs text-slate-300 mt-1 bg-slate-950 border border-slate-800/60 px-2.5 py-0.5 rounded-lg w-fit mx-auto md:mx-0 font-semibold" id="bidder-lbl-{{ g.id }}">🏆 {{ g.highest_bidder_name }}</p>
+                        <h4 class="text-3xl font-black text-emerald-400 tracking-tight transition-all duration-300 scale-100" id="bid-val-{{ g.id }}">₹{{ g.highest_bid }}</h4>
+                        <p class="text-xs text-slate-300 mt-1 bg-slate-950 border border-slate-800/60 px-2.5 py-0.5 rounded-lg w-fit mx-auto md:mx-0 font-semibold shadow-inner" id="bidder-lbl-{{ g.id }}">🏆 {{ g.highest_bidder_name }}</p>
                     </div>
+
                     <div class="md:col-span-3 bg-slate-950/60 border border-slate-800 p-3 rounded-xl space-y-2">
                         <span class="text-[9px] font-black text-indigo-400 uppercase tracking-widest block text-center">Proxy Submission Handle</span>
                         <div class="flex gap-1.5">
-                            <input type="text" id="proxy-name-{{ g.id }}" placeholder="Member Name" class="bg-slate-900 border border-slate-800 px-3 py-2 rounded-xl text-xs w-full text-white outline-none"><input type="number" id="proxy-inc-{{ g.id }}" placeholder="+1000" class="bg-slate-900 border border-slate-800 px-3 py-2 rounded-xl text-xs w-28 text-center text-emerald-400 font-black outline-none">
-                            <button onclick="injectProxyBid('{{ g.id }}')" class="bg-indigo-600 text-white text-xs font-black px-4 rounded-xl">Submit</button>
+                            <input type="text" id="proxy-name-{{ g.id }}" placeholder="Member Name" class="bg-slate-900 border border-slate-800 px-3 py-2 rounded-xl text-xs w-full text-white outline-none">
+                            <input type="number" id="proxy-inc-{{ g.id }}" placeholder="+1000" class="bg-slate-900 border border-slate-800 px-3 py-2 rounded-xl text-xs w-28 text-center text-emerald-400 font-black outline-none">
+                            <button onclick="injectProxyBid('{{ g.id }}')" class="bg-indigo-600 hover:bg-indigo-500 text-white text-xs font-black px-4 rounded-xl active:scale-95 transition-all shadow-md shadow-indigo-600/10">Submit</button>
                         </div>
                     </div>
                 </div>
 
+                <!-- ANIMATED BIDDING TRAIL STREAM EMPTY STATE -->
                 <div class="bg-slate-950/60 border border-slate-800 rounded-xl p-3">
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-800 pb-1">🔨 Session Bidding Trail Log</p>
                     <div id="action-trail-{{ g.id }}" class="space-y-1.5 max-h-32 overflow-y-auto text-xs font-mono text-slate-400 pr-1">
@@ -133,8 +166,9 @@
                     </div>
                 </div>
 
-                <div class="bg-slate-900/20 border border-slate-800/80 rounded-2xl overflow-hidden mt-4">
-                    <div class="bg-slate-900/60 px-4 py-2 border-b border-slate-800/80"><h4 class="text-[11px] font-black uppercase text-slate-300">📋 Complete Historical Ledger Summary</h4></div>
+                <!-- HISTORICAL LEDGER SUMMARY -->
+                <div class="bg-slate-900/20 border border-slate-800/80 rounded-2xl overflow-hidden mt-4 shadow-inner">
+                    <div class="bg-slate-900/60 px-4 py-2 border-b border-slate-800"><h4 class="text-[11px] font-black uppercase text-slate-300 tracking-wide">📋 Complete Historical Ledger Summary</h4></div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-[11px] border-collapse">
                             <thead>
@@ -143,15 +177,15 @@
                                 </tr>
                             </thead>
                             <tbody id="admin-ledger-body-{{ g.id }}" class="divide-y divide-slate-800/40 text-slate-300 font-semibold">
-                                <tr class="placeholder-ledger-row"><td colspan="6" class="text-center p-8 text-slate-500 italic">No cycles closed yet.</td></tr>
+                                <tr class="placeholder-ledger-row"><td colspan="6" class="text-center p-8 text-slate-600 italic">No cycles closed yet.</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
 
                 <div class="grid grid-cols-2 gap-2 pt-2">
-                    <button onclick="startChitRoom('{{ g.id }}')" class="bg-slate-800 text-white font-black py-2.5 rounded-xl text-xs uppercase tracking-wider border border-slate-700">🚀 Open Room</button>
-                    <button onclick="finalizeChitRoom('{{ g.id }}')" class="bg-rose-600 text-white font-black py-2.5 rounded-xl text-xs uppercase tracking-wider">🛑 Freeze & Finalize</button>
+                    <button onclick="startChitRoom('{{ g.id }}')" class="bg-slate-800 hover:bg-slate-700 text-white font-black py-2.5 rounded-xl text-xs uppercase tracking-wider border border-slate-700 transition-all active:scale-[0.98]">🚀 Open Room</button>
+                    <button onclick="finalizeChitRoom('{{ g.id }}')" class="bg-rose-600 hover:bg-rose-500 text-white font-black py-2.5 rounded-xl text-xs uppercase tracking-wider transition-all active:scale-[0.98] shadow-lg shadow-rose-900/10">🛑 Freeze & Finalize</button>
                 </div>
             </div>
             {% endfor %}
@@ -179,9 +213,9 @@
             if (id) { socket.emit('join_chit_room', { group_id: parseInt(id) }); loadAdminHistory(id); }
         });
 
-        // REAL-TIME BROADCAST LISTENER MATRIX FOR OFFLINE DATA INFLOWS
+        // REAL-TIME BACKGROUND BROADCAST LISTENER
         socket.on('history_updated', function(data) {
-            console.log("⚡ Syncing newly injected offline history data context code parameters:", data.group_id);
+            console.log("⚡ Sync caught for group history:", data.group_id);
             loadAdminHistory(data.group_id);
         });
 
@@ -195,27 +229,47 @@
             container.scrollTop = container.scrollHeight;
         });
 
+        // UPGRADED BULLETPROOF OFFLINE INJECTION SYNC HANDLER
         async function submitOfflineRecord() {
             const groupId = document.getElementById('seed-group-id').value;
             const month = document.getElementById('seed-month').value;
             const bid = document.getElementById('seed-bid').value;
             const winner = document.getElementById('seed-winner-name').value;
             
-            if(!month || !bid || !winner) return alert("Fill out all metric fields.");
+            if(!month || !bid || !winner) return alert("Please fill out all fields before injecting.");
             
-            const res = await fetch('/api/admin/inject-history', {
-                method: 'POST',
-                headers: {'Content-Type': 'application/json'},
-                body: JSON.stringify({ group_id: groupId, month, winning_bid: bid, winner_name: winner })
-            });
-            if((await res.json()).success) {
-                alert(`Successfully logged Month ${month} data row into database engine!`);
-                // Clear fields out cleanly
-                document.getElementById('seed-month').value = '';
-                document.getElementById('seed-bid').value = '';
-                document.getElementById('seed-winner-name').value = '';
-            } else {
-                alert("History injection storage system error.");
+            const btn = document.querySelector("button[onclick='submitOfflineRecord()']");
+            const originalText = btn.innerText;
+            btn.innerText = "⏳ Syncing with Database...";
+            btn.disabled = true;
+
+            try {
+                const res = await fetch('/api/admin/inject-history', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ group_id: groupId, month: month, winning_bid: bid, winner_name: winner })
+                });
+                
+                const result = await res.json();
+                
+                if(result.success) {
+                    alert(`🎉 Month ${month} historical data successfully saved!`);
+                    
+                    document.getElementById('seed-month').value = '';
+                    document.getElementById('seed-bid').value = '';
+                    document.getElementById('seed-winner-name').value = '';
+
+                    // DIRECT FOREGROUND INITIATION: Forces local data render right away
+                    loadAdminHistory(groupId); 
+                    
+                } else {
+                    alert("Error: " + (result.message || "Failed to inject history row."));
+                }
+            } catch (err) {
+                alert("Network connection error syncing with server.");
+            } finally {
+                btn.innerText = originalText;
+                btn.disabled = false;
             }
         }
 
