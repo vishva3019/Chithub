@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ChitHub - Secure Entrance Gateway</title>
+    <!-- Tailwind CSS for modern responsive layout layout framing -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gradient-to-tr from-slate-900 via-indigo-950 to-slate-900 text-slate-100 font-sans min-h-screen flex items-center justify-center p-4">
+
+    <!-- CORE AUTHENTICATION CARD BLOCK CONTAINER -->
+    <div class="bg-slate-900/80 backdrop-blur-md w-full max-w-md p-8 rounded-3xl border border-slate-800 shadow-2xl space-y-6 relative overflow-hidden">
+        
+        <!-- Header Branding Structure -->
+        <div class="text-center space-y-1">
+            <h1 class="text-4xl font-black bg-gradient-to-r from-indigo-400 to-cyan-400 bg-clip-text text-transparent tracking-tight">ChitHub</h1>
+            <p class="text-xs text-slate-400 font-medium tracking-wide uppercase">Digital Community Savings Portal</p>
+        </div>
+
+        <!-- ================= FRAME A: MEMBER LOGIN FORM ================= -->
+        <form id="login-frame" onsubmit="executeLogin(event)" class="space-y-4">
+            <h3 class="text-lg font-bold text-slate-200 border-b border-slate-800/60 pb-1.5">Account Portal Sign In</h3>
+            
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Registered Phone Number</label>
+                <input type="tel" id="login-phone" required placeholder="Enter 10-digit number" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 font-semibold transition-all">
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Security Password</label>
+                <input type="password" id="login-password" required placeholder="••••••••" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 transition-all">
+            </div>
+
+            <button type="submit" class="w-full bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-3.5 rounded-xl text-sm transition-all shadow-lg shadow-indigo-600/20 active:scale-[0.99]">
+                Sign In to Dashboard
+            </button>
+
+            <p class="text-xs text-center text-slate-400 pt-2">
+                New neighborhood member? <button type="button" onclick="toggleAuthFrames(true)" class="text-indigo-400 font-bold hover:underline bg-transparent border-none cursor-pointer">Register Profile Here</button>
+            </p>
+        </form>
+
+        <!-- ================= FRAME B: DISCRETE REGISTRATION FORM ================= -->
+        <form id="register-frame" onsubmit="executeRegister(event)" class="space-y-4 hidden">
+            <h3 class="text-lg font-bold text-slate-200 border-b border-slate-800/60 pb-1.5">Submit Membership Profile</h3>
+            
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Full Legal Name</label>
+                <input type="text" id="reg-name" required placeholder="e.g. Tata Mani" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 font-semibold transition-all">
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Mobile Phone Number</label>
+                <input type="tel" id="reg-phone" required placeholder="Enter 10-digit number" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 font-semibold transition-all">
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Choose Account Password</label>
+                <input type="password" id="reg-password" required placeholder="Minimum 6 characters" class="w-full bg-slate-950 border border-slate-800 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-indigo-500 transition-all">
+            </div>
+
+            <div>
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-1.5">Secret Chit Scheme Access Code</label>
+                <input type="text" id="reg-code" required placeholder="e.g. GRAMA2026" class="w-full bg-slate-950 border border-amber-900/60 text-amber-400 placeholder-amber-700/60 rounded-xl px-4 py-3 text-sm focus:outline-none focus:border-amber-500 font-mono tracking-widest uppercase transition-all">
+            </div>
+
+            <button type="submit" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-bold py-3.5 rounded-xl text-sm transition-all shadow-lg shadow-emerald-600/20 active:scale-[0.99]">
+                Submit Registration Profile
+            </button>
+
+            <p class="text-xs text-center text-slate-400 pt-2">
+                Already registered a profile? <button type="button" onclick="toggleAuthFrames(false)" class="text-indigo-400 font-bold hover:underline bg-transparent border-none cursor-pointer">Return to Login</button>
+            </p>
+        </form>
+
+    </div>
+
+    <!-- ================= CLIENT CONTROL SCRIPTING LOGIC ================= -->
+    <script>
+        /**
+         * Smoothly triggers visibility frames between sign in form and registration form
+         * @param {boolean} showRegister - Determines if target view frame is registration layout
+         */
+        function toggleAuthFrames(showRegister) {
+            const loginForm = document.getElementById('login-frame');
+            const registerForm = document.getElementById('register-frame');
+            
+            if (showRegister) {
+                loginForm.classList.add('hidden');
+                registerForm.classList.remove('hidden');
+            } else {
+                registerForm.classList.add('hidden');
+                loginForm.classList.remove('hidden');
+            }
+        }
+
+        /**
+         * Executes authenticated login post handshake to multi-group router endpoint
+         */
+        async function executeLogin(event) {
+            event.preventDefault();
+            const phone = document.getElementById('login-phone').value.trim();
+            const password = document.getElementById('login-password').value;
+
+            try {
+                // Resolved endpoint to match standard relational session api controller mapping
+                const response = await fetch('/api/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ phone: phone, password: password })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    // Redirects smoothly to either multi_admin or member_room based on user status schema
+                    window.location.href = result.redirect;
+                } else {
+                    alert("❌ Authentication Failure: " + (result.message || "Invalid credentials"));
+                }
+            } catch (err) {
+                console.error("Networking Engine Interruption Log:", err);
+                alert("⚠️ Communication block: Couldn't reach backend server process. Make sure terminal script loop is live.");
+            }
+        }
+
+        /**
+         * Executes clean signup profile registration parsing access code validation filters
+         */
+        async function executeRegister(event) {
+            event.preventDefault();
+            const name = document.getElementById('reg-name').value.trim();
+            const phone = document.getElementById('reg-phone').value.trim();
+            const password = document.getElementById('reg-password').value;
+            const accessCode = document.getElementById('reg-code').value.trim();
+
+            try {
+                const response = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        name: name,
+                        phone: phone,
+                        password: password,
+                        access_code: accessCode
+                    })
+                });
+
+                const result = await response.json();
+
+                if (response.ok && result.success) {
+                    alert("🎉 Profile Submitted!\n" + result.message);
+                    // Clear inputs and toggle back to login screen smoothly
+                    event.target.reset();
+                    toggleAuthFrames(false);
+                } else {
+                    alert("❌ Profile Submission Blocked: " + (result.message || "Validation constraint error"));
+                }
+            } catch (err) {
+                console.error("Networking Engine Interruption Log:", err);
+                alert("⚠️ Communication block: Registration packet failed to submit to local asset engine database.");
+            }
+        }
+    </script>
+</body>
+</html>
