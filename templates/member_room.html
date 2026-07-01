@@ -7,76 +7,40 @@
     <script src="https://cdn.tailwindcss.com"></script>
     <script src="/static/socket.io.js"></script>
     <style>
-        /* Modern Premium Canvas Mesh Backdrop Engine */
         .premium-bg {
             background-color: #0b0f19;
             background-image: 
                 radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.08) 0px, transparent 50%),
                 radial-gradient(at 50% 0%, rgba(34, 211, 238, 0.05) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.06) 0px, transparent 50%),
                 linear-gradient(rgba(255, 255, 255, 0.004) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(255, 255, 255, 0.004) 1px, transparent 1px);
-            background-size: 100% 100%, 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+            background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
         }
-
-        /* Orbit lounge animations */
-        @keyframes orbit {
-            0% { transform: rotate(0deg); }
-            100% { transform: rotate(360deg); }
-        }
-        @keyframes reverse-orbit {
-            0% { transform: rotate(360deg); }
-            100% { transform: rotate(0deg); }
-        }
+        @keyframes orbit { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+        @keyframes reverse-orbit { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
         .orbit-ring-1 { animation: orbit 8s linear infinite; }
         .orbit-ring-2 { animation: reverse-orbit 12s linear infinite; }
         .orbit-ring-3 { animation: orbit 20s linear infinite; }
-
-        /* Soundwave frequencies for bidding log placeholder */
-        @keyframes soundWave {
-            0%, 100% { transform: scaleY(0.3); }
-            50% { transform: scaleY(1); }
-        }
-        .wave-bar {
-            transform-origin: bottom;
-            animation: soundWave 1.2s ease-in-out infinite;
-        }
-
-        /* QR Scanner laser line sweep animation effect */
-        @keyframes laserSweep {
-            0% { top: 0%; opacity: 0; }
-            10% { opacity: 1; }
-            90% { opacity: 1; }
-            100% { top: 100%; opacity: 0; }
-        }
-        .scanner-laser {
-            position: absolute;
-            left: 0;
-            width: 100%;
-            height: 2px;
-            background: linear-gradient(to right, transparent, #6366f1, #22d3ee, #6366f1, transparent);
-            box-shadow: 0 0 8px #22d3ee;
-            animation: laserSweep 2s linear infinite;
-        }
+        @keyframes soundWave { 0%, 100% { transform: scaleY(0.3); } 50% { transform: scaleY(1); } }
+        .wave-bar { transform-origin: bottom; animation: soundWave 1.2s ease-in-out infinite; }
+        @keyframes laserSweep { 0% { top: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
+        .scanner-laser { position: absolute; left: 0; width: 100%; height: 2px; background: linear-gradient(to right, transparent, #6366f1, #22d3ee, #6366f1, transparent); box-shadow: 0 0 8px #22d3ee; animation: laserSweep 2s linear infinite; }
     </style>
 </head>
 <body class="premium-bg text-slate-100 font-sans min-h-screen antialiased">
 
-    <!-- NAVIGATION HEADER -->
     <nav class="bg-slate-950/70 backdrop-blur-md border-b border-slate-800/60 p-4 flex justify-between items-center shadow-lg sticky top-0 z-40">
         <div>
             <h1 class="text-xl font-black bg-gradient-to-r from-indigo-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent tracking-tight">ChitHub</h1>
             <p class="text-xs text-slate-400">Welcome, <span id="profile-name" class="font-bold text-slate-200">{{ user_name }}</span></p>
         </div>
-        <a href="/logout" class="bg-slate-900/80 hover:bg-slate-700 px-4 py-2 border border-slate-800 rounded-xl text-xs font-bold transition-all backdrop-blur-sm">Logout Portal</a>
+        <a href="/logout" class="bg-slate-900/80 hover:bg-slate-700 px-4 py-2 border border-slate-800 rounded-xl text-xs font-bold backdrop-blur-sm">Logout Portal</a>
     </nav>
 
-    <!-- CORE INTERFACE CONTAINER -->
     <main class="max-w-5xl mx-auto p-4 lg:p-6 space-y-8 relative z-10">
         
-        <!-- CONDITION A: DISPLAY LOCKED WAITING LOUNGE WITH ANIMATED MESH GRAPHICS -->
         {% if not groups %}
-        <div class="bg-slate-950/40 border border-slate-800/80 rounded-3xl p-10 text-center max-w-2xl mx-auto my-12 shadow-2xl space-y-8 relative overflow-hidden backdrop-blur-xl backdrop-saturate-150">
+        <div class="bg-slate-950/40 border border-slate-800/80 rounded-3xl p-10 text-center max-w-2xl mx-auto my-12 shadow-2xl space-y-8 relative overflow-hidden backdrop-blur-xl">
             <div class="relative w-48 h-48 mx-auto flex items-center justify-center">
                 <div class="absolute inset-0 rounded-full border border-dashed border-indigo-500/20 orbit-ring-3"></div>
                 <div class="absolute w-36 h-36 rounded-full border border-double border-cyan-500/30 orbit-ring-2"></div>
@@ -84,13 +48,11 @@
                 <div class="relative w-14 h-14 bg-gradient-to-tr from-indigo-600 to-cyan-500 rounded-full flex items-center justify-center text-white text-xl font-black shadow-[0_0_30px_rgba(79,70,229,0.6)] animate-bounce">🔒</div>
                 <div class="absolute w-14 h-14 bg-indigo-500/20 rounded-full animate-ping"></div>
             </div>
-
             <div class="space-y-3 relative z-10">
                 <h2 class="text-2xl font-black text-white tracking-tight">System Authenticated & Secured</h2>
                 <p class="text-sm text-indigo-400/90 font-mono tracking-wide bg-indigo-950/30 border border-indigo-900/40 w-fit mx-auto px-4 py-1.5 rounded-full">Awaiting Group Assignment Matrix...</p>
                 <p class="text-xs text-slate-400 max-w-sm mx-auto pt-2 leading-relaxed">Your account profile is safely logged onto the secure master engine network node. Live live-stream dashboards will initialize automatically once the supervisor provisions your membership tracking access.</p>
             </div>
-
             <div class="flex items-center justify-center gap-2 text-[10px] text-slate-500 font-mono pt-4 border-t border-slate-900">
                 <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
                 <span>CHITHUB SECURE CONNECTION ENCRYPTED // 2026</span>
@@ -98,9 +60,8 @@
         </div>
         {% endif %}
 
-        <!-- CONDITION B: DISPLAY CHIT CARDS ONCE ASSIGNED IN THE ADMIN DECK -->
         {% for g in groups %}
-        <div class="member-chit-card bg-slate-950/40 border border-slate-800/80 rounded-3xl p-6 shadow-2xl space-y-6 backdrop-blur-xl backdrop-saturate-150" data-id="{{ g.id }}">
+        <div class="member-chit-card bg-slate-950/40 border border-slate-800/80 rounded-3xl p-6 shadow-2xl space-y-6 backdrop-blur-xl" data-id="{{ g.id }}">
             
             <div class="flex justify-between items-start border-b border-slate-800/60 pb-3">
                 <div>
@@ -111,7 +72,7 @@
                     {% if g.is_active %}
                     <span class="bg-emerald-950 text-emerald-400 border border-emerald-900 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider animate-pulse">● Live Bidding Open</span>
                     {% else %}
-                    <span class="bg-slate-900/80 border border-slate-800 text-slate-500 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider">🔒 Locked </span>
+                    <span class="bg-slate-900/80 border border-slate-800 text-slate-500 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider">🔒 Locked Until Next Schedule</span>
                     {% endif %}
                 </div>
             </div>
@@ -123,21 +84,18 @@
                         <h1 class="text-4xl font-black mt-1 text-emerald-400 tracking-tight" id="member-val-{{ g.id }}">₹{{ g.highest_bid }}</h1>
                         <p class="text-xs text-slate-300 mt-1.5 bg-slate-950 border border-slate-800 rounded-lg inline-block font-semibold" id="member-lbl-{{ g.id }}">🏆 Standing: {{ g.highest_bidder_name }}</p>
                     </div>
-
                     <div class="grid grid-cols-4 gap-1.5">
                         <button onclick="submitIncrement('{{ g.id }}', 500)" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-lg text-[11px] transition-all">+₹500</button>
                         <button onclick="submitIncrement('{{ g.id }}', 1000)" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded-lg text-[11px] transition-all">+₹1k</button>
                         <button onclick="submitIncrement('{{ g.id }}', 1500)" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-lg text-[11px] transition-all">+₹1.5k</button>
                         <button onclick="submitIncrement('{{ g.id }}', 2000)" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-lg text-[11px] transition-all">+₹2k</button>
                     </div>
-
                     <div class="bg-slate-950 border border-slate-800 p-1.5 rounded-xl flex gap-2 items-center">
                         <input type="number" id="custom-inc-{{ g.id }}" placeholder="Type custom value" class="bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg text-xs w-full text-white font-bold outline-none transition-all">
                         <button onclick="submitCustomIncrement('{{ g.id }}')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black px-4 py-1.5 rounded-lg transition-all active:scale-95">Raise</button>
                     </div>
                 </div>
 
-                <!-- ANIMATED BIDDING ACTIVITY STREAM EMPTY STATE -->
                 <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-4 flex flex-col h-44 md:h-auto justify-center">
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-800 pb-1.5 self-start w-full text-left">🔨 Auction Bidding Activity Stream</p>
                     <div id="live-stream-{{ g.id }}" class="space-y-1.5 overflow-y-auto flex-1 text-xs font-mono text-slate-400 flex flex-col justify-center items-center">
@@ -146,7 +104,6 @@
                                 <div class="w-0.5 bg-indigo-500/40 rounded wave-bar" style="animation-delay: 0.1s"></div>
                                 <div class="w-0.5 bg-indigo-400/50 rounded wave-bar" style="animation-delay: 0.3s"></div>
                                 <div class="w-0.5 bg-cyan-400/60 rounded wave-bar" style="animation-delay: 0.5s"></div>
-                                <div class="w-0.5 bg-indigo-400/50 rounded wave-bar" style="animation-delay: 0.2s"></div>
                             </div>
                             <p class="text-slate-500 italic text-[11px]">No active stream logs. Standing by...</p>
                         </div>
@@ -154,12 +111,9 @@
                 </div>
             </div>
 
-            <!-- LEDGER & INTEGRATED DYNAMIC REAL-TIME UPI QR CODE SECTION -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
-                
-                <!-- ANIMATED HISTORICAL LEDGER LOG DETAILS -->
                 <div class="lg:col-span-2 bg-slate-900/20 border border-slate-800 rounded-2xl overflow-hidden shadow-inner">
-                    <div class="bg-slate-900/60 border-b border-slate-800 px-4 py-2.5"><h4 class="text-[11px] font-black uppercase text-slate-300 tracking-wide">📋 Complete Historical Logs</h4></div>
+                    <div class="bg-slate-900/60 border-b border-slate-800 px-4 py-2.5"><h4 class="text-[11px] font-black uppercase text-slate-300 tracking-wide">📋 Complete Historical Itemized Ledger Logs</h4></div>
                     <div class="overflow-x-auto">
                         <table class="w-full text-left text-[11px] border-collapse">
                             <thead>
@@ -168,30 +122,22 @@
                                 </tr>
                             </thead>
                             <tbody id="ledger-body-{{ g.id }}" class="divide-y divide-slate-800/40 font-semibold text-slate-300">
-                                <tr class="member-ledger-placeholder"><td colspan="6" class="text-center p-8 text-slate-600 italic font-mono tracking-wider animate-pulse">
-                                    📁 PARSING TRANSACTION RECORDS...
-                                </td></tr>
+                                <tr class="member-ledger-placeholder"><td colspan="6" class="text-center p-8 text-slate-600 italic font-mono tracking-wider animate-pulse">📁 PARSING TRANSACTION RECORDS... EMPTY STABLE</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <!-- SCANNING LASER EFFECT QR CONTAINER MODULE -->
                 <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-4 flex flex-col items-center justify-center text-center space-y-3">
                     <span class="text-[9px] font-black tracking-widest text-indigo-400 uppercase">⚡ Current Dynamic Settlement Handle</span>
                     <div class="bg-white p-2 rounded-xl relative overflow-hidden" id="qr-container-{{ g.id }}">
-                        <div class="w-32 h-32 flex flex-col items-center justify-center text-[10px] text-slate-400 italic font-sans p-2 bg-slate-50 border rounded-lg border-dashed border-slate-200">
-                            <span class="text-lg mb-1 animate-pulse">📡</span>
-                            <span>Awaiting cycle data</span>
-                            <div class="scanner-laser"></div>
-                        </div>
+                        <div class="w-32 h-32 flex flex-col items-center justify-center text-[10px] text-slate-400 italic font-sans p-2 bg-slate-50 border rounded-lg border-dashed border-slate-200"><span class="text-lg mb-1 animate-pulse">📡</span><span>Awaiting cycle data</span><div class="scanner-laser"></div></div>
                     </div>
                     <div>
                         <h5 class="text-xs font-bold text-slate-200" id="qr-title-{{ g.id }}">No Pending Settlements</h5>
                         <p class="text-[10px] text-slate-500 font-semibold mt-0.5">UPI ID: 9686193049@slc</p>
                     </div>
                 </div>
-
             </div>
 
         </div>
@@ -206,20 +152,14 @@
             if (id) { socket.emit('join_chit_room', { group_id: parseInt(id) }); loadLedgerHistory(id); }
         });
 
-        socket.on('bid_broadcast', function(data) {
-            const v = document.getElementById(`member-val-${data.group_id}`);
-            const l = document.getElementById(`member-lbl-${data.group_id}`);
-            if (v) v.innerText = "₹" + data.highest_bid.toLocaleString('en-IN');
-            if (l) l.innerText = "🏆 Standing: " + data.highest_bidder;
+        // REAL-TIME BROADCAST LISTENER MATRIX FOR USER PORTALS
+        socket.on('history_updated', function(data) {
+            console.log("⚡ Syncing newly added offline history metrics into member layout context...");
+            loadLedgerHistory(data.group_id);
         });
 
-        socket.on('single_log_append', function(data) {
-            const logContainer = document.getElementById(`live-stream-${data.group_id}`);
-            if(!logContainer) return; 
-            if(logContainer.querySelector('.member-stream-placeholder')) logContainer.innerHTML = '';
-            logContainer.insertAdjacentHTML('beforeend', `<div class="flex justify-between bg-slate-950 p-1.5 rounded-lg border border-slate-800/40"><span><b>${data.name}</b> +₹${data.increment}</span><span>₹${data.total}</span></div>`);
-            logContainer.scrollTop = logContainer.scrollHeight;
-        });
+        socket.on('bid_broadcast', function(data) { document.getElementById(`member-val-${data.group_id}`).innerText = "₹" + data.highest_bid.toLocaleString('en-IN'); document.getElementById(`member-lbl-${data.group_id}`).innerText = "🏆 Standing: " + data.highest_bidder; });
+        socket.on('single_log_append', function(data) { const logContainer = document.getElementById(`live-stream-${data.group_id}`); if(logContainer.querySelector('.member-stream-placeholder')) logContainer.innerHTML = ''; logContainer.insertAdjacentHTML('beforeend', `<div class="flex justify-between bg-slate-950 p-1.5 rounded-lg border border-slate-800/40"><span><b>${data.name}</b> +₹${data.increment}</span><span>₹${data.total}</span></div>`); logContainer.scrollTop = logContainer.scrollHeight; });
 
         function submitIncrement(groupId, value) { socket.emit('place_incremental_bid', { group_id: parseInt(groupId), increment: parseFloat(value) }); }
         function submitCustomIncrement(groupId) { const f = document.getElementById(`custom-inc-${groupId}`); submitIncrement(groupId, f.value.trim()); f.value = ''; }
@@ -232,7 +172,6 @@
             if (result.success && result.history.length > 0) {
                 tbody.innerHTML = '';
                 const historyWinners = result.history.map(item => item.winner);
-                
                 const latestCycle = result.history[result.history.length - 1];
                 generateSettlementQR(groupId, latestCycle, myName, result.base_installment, historyWinners);
 
@@ -242,13 +181,7 @@
                     else if (historyWinners.slice(0, item.month - 1).includes(myName)) { dueLabel = "₹" + result.base_installment.toLocaleString('en-IN') + " (Full)"; }
                     else { dueLabel = "₹" + item.due_non_winner.toLocaleString('en-IN') + " (Discounted)"; }
 
-                    tbody.insertAdjacentHTML('beforeend', `
-                        <tr class="hover:bg-slate-900/40 border-b border-slate-800/40">
-                            <td class="p-3 text-slate-400 font-mono">Month ${item.month}</td><td class="p-3 text-white font-bold">${item.winner}</td>
-                            <td class="p-3 text-center font-mono">₹${item.bid.toLocaleString('en-IN')}</td><td class="p-3 text-center text-amber-500 font-mono">₹${item.agent_fee.toLocaleString('en-IN')}</td>
-                            <td class="p-3 text-center text-teal-400 font-mono">₹${item.dividend_per_head.toLocaleString('en-IN')}</td><td class="p-3 text-center font-mono text-indigo-400">${dueLabel}</td>
-                        </tr>
-                    `);
+                    tbody.insertAdjacentHTML('beforeend', `<tr class="hover:bg-slate-900/40 border-b border-slate-800/40"><td class="p-3 text-slate-400 font-mono">Month ${item.month}</td><td class="p-3 text-white font-bold">${item.winner}</td><td class="p-3 text-center font-mono">₹${item.bid.toLocaleString('en-IN')}</td><td class="p-3 text-center text-amber-500 font-mono">₹${item.agent_fee.toLocaleString('en-IN')}</td><td class="p-3 text-center text-teal-400 font-mono">₹${item.dividend_per_head.toLocaleString('en-IN')}</td><td class="p-3 text-center font-mono text-indigo-400">${dueLabel}</td></tr>`);
                 });
             }
         }
@@ -267,7 +200,6 @@
             qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiString)}" alt="Scan to Pay" class="w-32 h-32 rounded-lg border">`;
             titleContainer.innerText = titleText;
         }
-
         socket.on('room_closed', function() { window.location.reload(); });
     </script>
 </body>
