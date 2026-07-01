@@ -33,13 +33,12 @@
     </nav>
 
     <main class="max-w-7xl mx-auto p-4 lg:p-6 grid grid-cols-1 lg:grid-cols-3 gap-6 relative z-10">
-        
         <div class="space-y-6 h-fit">
-            <div class="bg-slate-950/40 border border-slate-800/80 p-5 rounded-3xl shadow-2xl space-y-4 backdrop-blur-xl">
+            <div class="bg-slate-950/40 border border-slate-800/60 p-5 rounded-3xl shadow-2xl space-y-4 backdrop-blur-xl">
                 <h3 class="font-black border-b border-slate-800/60 pb-2 text-indigo-400">✨ Initialize New Scheme</h3>
                 <div>
-                    <label class="block text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1">Name Of The Chit Book</label>
-                    <input type="text" id="new-g-name" placeholder="e.g. 1 Lakh Chit Fund" class="w-full bg-slate-900/60 border border-slate-800/80 p-3 rounded-xl text-sm focus:border-indigo-500 text-white outline-none">
+                    <label class="block text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1">Chit Book Name</label>
+                    <input type="text" id="new-g-name" placeholder="e.g. 6 Lakhs Village Loop" class="w-full bg-slate-900/60 border border-slate-800/80 p-3 rounded-xl text-sm focus:border-indigo-500 text-white outline-none">
                 </div>
                 <div class="grid grid-cols-2 gap-2">
                     <div>
@@ -54,7 +53,7 @@
                 <button onclick="createNewChitGroup()" class="w-full bg-indigo-600 text-white font-black py-3 rounded-xl text-xs uppercase tracking-widest transition-all">Create Chit Group</button>
             </div>
 
-            <div class="bg-slate-950/40 border border-slate-800/80 p-5 rounded-3xl shadow-2xl space-y-4 backdrop-blur-xl">
+            <div class="bg-slate-950/40 border border-slate-800/60 p-5 rounded-3xl shadow-2xl space-y-4 backdrop-blur-xl">
                 <h3 class="font-black border-b border-slate-800/60 pb-2 text-amber-500">📥 Load Offline History</h3>
                 <div>
                     <label class="block text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1">Select Active Chit Fund</label>
@@ -75,8 +74,8 @@
                     </div>
                 </div>
                 <div>
-                    <label class="block text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1">Winner's Name (Matches exact user profile name)</label>
-                    <input type="text" id="seed-winner-name" placeholder="e.g. Annadurai" class="w-full bg-slate-900 border border-slate-800 p-3 rounded-xl text-xs text-white outline-none">
+                    <label class="block text-[10px] font-bold uppercase text-slate-400 tracking-wider mb-1">Winner's Name</label>
+                    <input type="text" id="seed-winner-name" placeholder="e.g. Mani" class="w-full bg-slate-900 border border-slate-800 p-3 rounded-xl text-xs text-white outline-none">
                 </div>
                 <button onclick="submitOfflineRecord()" class="w-full bg-amber-600 hover:bg-amber-500 text-white font-black py-3 rounded-xl text-xs uppercase tracking-widest transition-all shadow-md">Inject Past Month Log</button>
             </div>
@@ -159,6 +158,7 @@
         </div>
     </main>
 
+    <!-- ASSIGN MEMBERS MODAL -->
     <div id="membership-modal" class="fixed inset-0 bg-slate-950/80 backdrop-blur-sm flex items-center justify-center p-4 hidden z-50">
         <div class="bg-slate-900 border border-slate-800 rounded-3xl max-w-md w-full p-6 space-y-4 shadow-2xl">
             <div class="border-b border-slate-800 pb-2"><h3 class="text-md font-black text-white" id="modal-title">Allocate Group Members</h3></div>
@@ -179,6 +179,12 @@
             if (id) { socket.emit('join_chit_room', { group_id: parseInt(id) }); loadAdminHistory(id); }
         });
 
+        // REAL-TIME BROADCAST LISTENER MATRIX FOR OFFLINE DATA INFLOWS
+        socket.on('history_updated', function(data) {
+            console.log("⚡ Syncing newly injected offline history data context code parameters:", data.group_id);
+            loadAdminHistory(data.group_id);
+        });
+
         socket.on('room_opened', function(data) { document.getElementById(`card-node-${data.group_id}`).classList.add('room-active'); });
         socket.on('bid_broadcast', function(data) { document.getElementById(`bid-val-${data.group_id}`).innerText = "₹" + data.highest_bid.toLocaleString('en-IN'); document.getElementById(`bidder-lbl-${data.group_id}`).innerText = "🏆 " + data.highest_bidder; });
 
@@ -195,7 +201,7 @@
             const bid = document.getElementById('seed-bid').value;
             const winner = document.getElementById('seed-winner-name').value;
             
-            if(!month || !bid || !winner) return alert("Fill out full offline transaction historical metrics.");
+            if(!month || !bid || !winner) return alert("Fill out all metric fields.");
             
             const res = await fetch('/api/admin/inject-history', {
                 method: 'POST',
@@ -203,10 +209,13 @@
                 body: JSON.stringify({ group_id: groupId, month, winning_bid: bid, winner_name: winner })
             });
             if((await res.json()).success) {
-                alert(`Successfully recorded Month ${month} historical offline data node!`);
-                window.location.reload();
+                alert(`Successfully logged Month ${month} data row into database engine!`);
+                // Clear fields out cleanly
+                document.getElementById('seed-month').value = '';
+                document.getElementById('seed-bid').value = '';
+                document.getElementById('seed-winner-name').value = '';
             } else {
-                alert("Storage sync insertion exception error.");
+                alert("History injection storage system error.");
             }
         }
 
