@@ -5,25 +5,16 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ChitHub - Member Portal</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    <script src="https://cdn.socket.io/4.7.5/socket.io.min.js"></script>
     <style>
         .premium-bg {
             background-color: #0b0f19;
             background-image: 
                 radial-gradient(at 0% 0%, rgba(79, 70, 229, 0.08) 0px, transparent 50%),
                 radial-gradient(at 50% 0%, rgba(34, 211, 238, 0.05) 0px, transparent 50%),
-                radial-gradient(at 100% 100%, rgba(99, 102, 241, 0.06) 0px, transparent 50%),
                 linear-gradient(rgba(255, 255, 255, 0.004) 1px, transparent 1px),
                 linear-gradient(90deg, rgba(255, 255, 255, 0.004) 1px, transparent 1px);
-            background-size: 100% 100%, 100% 100%, 100% 100%, 32px 32px, 32px 32px;
+            background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
         }
-        @keyframes orbit { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        @keyframes reverse-orbit { 0% { transform: rotate(360deg); } 100% { transform: rotate(0deg); } }
-        .orbit-ring-1 { animation: orbit 8s linear infinite; }
-        .orbit-ring-2 { animation: reverse-orbit 12s linear infinite; }
-        .orbit-ring-3 { animation: orbit 20s linear infinite; }
-        @keyframes soundWave { 0%, 100% { transform: scaleY(0.3); } 50% { transform: scaleY(1); } }
-        .wave-bar { transform-origin: bottom; animation: soundWave 1.2s ease-in-out infinite; }
         @keyframes laserSweep { 0% { top: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
         .scanner-laser { position: absolute; left: 0; width: 100%; height: 2px; background: linear-gradient(to right, transparent, #6366f1, #22d3ee, #6366f1, transparent); box-shadow: 0 0 8px #22d3ee; animation: laserSweep 2s linear infinite; }
     </style>
@@ -40,72 +31,43 @@
 
     <main class="max-w-5xl mx-auto p-4 lg:p-6 space-y-8 relative z-10">
         {% if not groups %}
-        <div class="bg-slate-950/40 border border-slate-800/80 rounded-3xl p-10 text-center max-w-2xl mx-auto my-12 shadow-2xl space-y-8 relative overflow-hidden backdrop-blur-xl">
-            <div class="relative w-48 h-48 mx-auto flex items-center justify-center">
-                <div class="absolute inset-0 rounded-full border border-dashed border-indigo-500/20 orbit-ring-3"></div>
-                <div class="absolute w-36 h-36 rounded-full border border-double border-cyan-500/30 orbit-ring-2"></div>
-                <div class="absolute w-24 h-24 rounded-full border border-dashed border-indigo-400/50 orbit-ring-1"></div>
-                <div class="relative w-14 h-14 bg-gradient-to-tr from-indigo-600 to-cyan-500 rounded-full flex items-center justify-center text-white text-xl font-black shadow-[0_0_30px_rgba(79,70,229,0.6)] animate-bounce">🔒</div>
-                <div class="absolute w-14 h-14 bg-indigo-500/20 rounded-full animate-ping"></div>
-            </div>
-            <div class="space-y-3 relative z-10">
-                <h2 class="text-2xl font-black text-white tracking-tight">System Authenticated & Secured</h2>
-                <p class="text-sm text-indigo-400/90 font-mono tracking-wide bg-indigo-950/30 border border-indigo-900/40 w-fit mx-auto px-4 py-1.5 rounded-full">Awaiting Group Assignment Matrix...</p>
-                <p class="text-xs text-slate-400 max-w-sm mx-auto pt-2 leading-relaxed">Your account profile is safely logged onto the secure master engine network node. Live live-stream dashboards will initialize automatically once the supervisor provisions your membership tracking access.</p>
-            </div>
-            <div class="flex items-center justify-center gap-2 text-[10px] text-slate-500 font-mono pt-4 border-t border-slate-900">
-                <span class="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-                <span>CHITHUB SECURE CONNECTION ENCRYPTED // 2026</span>
-            </div>
+        <div class="bg-slate-950/40 border border-slate-800/80 rounded-3xl p-10 text-center max-w-2xl mx-auto my-12 shadow-2xl space-y-8 backdrop-blur-xl">
+            <h2 class="text-2xl font-black text-white tracking-tight">System Authenticated</h2>
+            <p class="text-xs text-slate-400">Awaiting membership mapping by administration deck...</p>
         </div>
         {% endif %}
 
         {% for g in groups %}
-        <div class="member-chit-card bg-slate-950/40 border border-slate-800/80 rounded-3xl p-6 shadow-2xl space-y-6 backdrop-blur-xl" data-id="{{ g.id }}">
+        <div class="member-chit-card bg-slate-950/40 border border-slate-800/80 rounded-3xl p-6 shadow-2xl space-y-6 backdrop-blur-xl" data-id="{{ g.id }}" id="card-node-{{ g.id }}">
             <div class="flex justify-between items-start border-b border-slate-800/60 pb-3">
                 <div>
                     <h2 class="text-lg font-black text-white tracking-tight">{{ g.name }}</h2>
                     <p class="text-xs text-slate-400">Face Value: <span class="text-indigo-400 font-bold">₹{{ "{:,}".format(g.total_pool) }}</span></p>
                 </div>
-                <div>
-                    {% if g.is_active %}
-                    <span class="bg-emerald-950 text-emerald-400 border border-emerald-900 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider animate-pulse">● Live Bidding Open</span>
-                    {% else %}
-                    <span class="bg-slate-900/80 border border-slate-800 text-slate-500 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider">🔒 Locked Until Next Schedule</span>
-                    {% endif %}
+                <div id="status-badge-{{ g.id }}">
+                    <span class="bg-slate-900 text-slate-500 border border-slate-800 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider">🔒 Locked Until Next Schedule</span>
                 </div>
             </div>
 
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 {% if not g.is_active %}opacity-45 pointer-events-none select-none{% endif %}">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 transition-all duration-300" id="bidding-grid-{{ g.id }}">
                 <div class="bg-slate-900/80 border border-slate-800 p-5 rounded-2xl text-center space-y-4">
                     <div>
                         <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest">Accumulated Discount Value</p>
-                        <h1 class="text-4xl font-black mt-1 text-emerald-400 tracking-tight" id="member-val-{{ g.id }}">₹{{ g.highest_bid }}</h1>
-                        <p class="text-xs text-slate-300 mt-1.5 bg-slate-950 border border-slate-800 rounded-lg inline-block font-semibold" id="member-lbl-{{ g.id }}">🏆 Standing: {{ g.highest_bidder_name }}</p>
+                        <h1 class="text-4xl font-black mt-1 text-emerald-400 tracking-tight" id="member-val-{{ g.id }}">₹0</h1>
+                        <p class="text-xs text-slate-300 mt-1.5 bg-slate-950 border border-slate-800 rounded-lg inline-block font-semibold" id="member-lbl-{{ g.id }}">🏆 Standing: None</p>
                     </div>
                     <div class="grid grid-cols-4 gap-1.5">
-                        <button onclick="submitIncrement('{{ g.id }}', 500)" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-lg text-[11px] transition-all">+₹500</button>
-                        <button onclick="submitIncrement('{{ g.id }}', 1000)" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded-lg text-[11px] transition-all">+₹1k</button>
-                        <button onclick="submitIncrement('{{ g.id }}', 1500)" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-lg text-[11px] transition-all">+₹1.5k</button>
-                        <button onclick="submitIncrement('{{ g.id }}', 2000)" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-lg text-[11px] transition-all">+₹2k</button>
-                    </div>
-                    <div class="bg-slate-950 border border-slate-800 p-1.5 rounded-xl flex gap-2 items-center">
-                        <input type="number" id="custom-inc-{{ g.id }}" placeholder="Type custom value" class="bg-slate-900 border border-slate-800 px-3 py-1.5 rounded-lg text-xs w-full text-white font-bold outline-none transition-all">
-                        <button onclick="submitCustomIncrement('{{ g.id }}')" class="bg-emerald-600 hover:bg-emerald-500 text-white text-xs font-black px-4 py-1.5 rounded-lg transition-all active:scale-95">Raise</button>
+                        <button onclick="submitIncrement('{{ g.id }}', 500)" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-lg text-[11px]">+₹500</button>
+                        <button onclick="submitIncrement('{{ g.id }}', 1000)" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded-lg text-[11px]">+₹1k</button>
+                        <button onclick="submitIncrement('{{ g.id }}', 1500)" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-lg text-[11px]">+₹1.5k</button>
+                        <button onclick="submitIncrement('{{ g.id }}', 2000)" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-lg text-[11px]">+₹2k</button>
                     </div>
                 </div>
 
                 <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-4 flex flex-col h-44 md:h-auto justify-center">
                     <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-800 pb-1.5 self-start w-full text-left">🔨 Auction Bidding Activity Stream</p>
-                    <div id="live-stream-{{ g.id }}" class="space-y-1.5 overflow-y-auto flex-1 text-xs font-mono text-slate-400 flex flex-col justify-center items-center">
-                        <div class="flex flex-col items-center justify-center space-y-2 py-4 member-stream-placeholder w-full">
-                            <div class="flex items-end gap-1 h-4">
-                                <div class="w-0.5 bg-indigo-500/40 rounded wave-bar" style="animation-delay: 0.1s"></div>
-                                <div class="w-0.5 bg-indigo-400/50 rounded wave-bar" style="animation-delay: 0.3s"></div>
-                                <div class="w-0.5 bg-cyan-400/60 rounded wave-bar" style="animation-delay: 0.5s"></div>
-                            </div>
-                            <p class="text-slate-500 italic text-[11px]">No active stream logs. Standing by...</p>
-                        </div>
+                    <div id="live-stream-{{ g.id }}" class="space-y-1.5 overflow-y-auto flex-1 text-xs font-mono text-slate-400 pr-1">
+                        <p class="text-slate-500 italic text-[11px] text-center">No active stream logs.</p>
                     </div>
                 </div>
             </div>
@@ -121,7 +83,7 @@
                                 </tr>
                             </thead>
                             <tbody id="ledger-body-{{ g.id }}" class="divide-y divide-slate-800/40 font-semibold text-slate-300">
-                                <tr class="member-ledger-placeholder"><td colspan="6" class="text-center p-8 text-slate-600 italic font-mono tracking-wider animate-pulse">📁 PARSING TRANSACTION RECORDS... EMPTY STABLE</td></tr>
+                                <tr class="member-ledger-placeholder"><td colspan="6" class="text-center p-8 text-slate-600 italic font-mono">No cycles closed yet.</td></tr>
                             </tbody>
                         </table>
                     </div>
@@ -130,7 +92,7 @@
                 <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-4 flex flex-col items-center justify-center text-center space-y-3">
                     <span class="text-[9px] font-black tracking-widest text-indigo-400 uppercase">⚡ Current Dynamic Settlement Handle</span>
                     <div class="bg-white p-2 rounded-xl relative overflow-hidden" id="qr-container-{{ g.id }}">
-                        <div class="w-32 h-32 flex flex-col items-center justify-center text-[10px] text-slate-400 italic font-sans p-2 bg-slate-50 border rounded-lg border-dashed border-slate-200"><span class="text-lg mb-1 animate-pulse">📡</span><span>Awaiting cycle data</span><div class="scanner-laser"></div></div>
+                        <div class="w-32 h-32 flex flex-col items-center justify-center text-[10px] text-slate-400 italic font-sans p-2 bg-slate-50 border rounded-lg border-dashed border-slate-200"><span class="text-lg mb-1 animate-pulse">📡</span><span>Awaiting data</span><div class="scanner-laser"></div></div>
                     </div>
                     <div>
                         <h5 class="text-xs font-bold text-slate-200" id="qr-title-{{ g.id }}">No Pending Settlements</h5>
@@ -143,61 +105,68 @@
     </main>
 
     <script>
-        let socket;
-        // SPEED UPGRADE: Delayed socket pooling overrides initialized sequentially after DOM renders are stable
-        window.addEventListener('DOMContentLoaded', () => {
-            try {
-                socket = io({
-                    transports: ['websocket', 'polling'],
-                    upgrade: true,
-                    rememberUpgrade: true,
-                    timeout: 5000
-                });
-                socket.on('history_updated', function(data) {
-                    loadLedgerHistory(parseInt(data.group_id));
-                });
-                socket.on('bid_broadcast', function(data) { document.getElementById(`member-val-${data.group_id}`).innerText = "₹" + data.highest_bid.toLocaleString('en-IN'); document.getElementById(`member-lbl-${data.group_id}`).innerText = "🏆 Standing: " + data.highest_bidder; });
-                socket.on('single_log_append', function(data) { const logContainer = document.getElementById(`live-stream-${data.group_id}`); if(logContainer.querySelector('.member-stream-placeholder')) logContainer.innerHTML = ''; logContainer.insertAdjacentHTML('beforeend', `<div class="flex justify-between bg-slate-950 p-1.5 rounded-lg border border-slate-800/40"><span><b>${data.name}</b> +₹${data.increment}</span><span>₹${data.total}</span></div>`); logContainer.scrollTop = logContainer.scrollHeight; });
-
-                document.querySelectorAll('.member-chit-card').forEach(card => {
-                    const id = card.getAttribute('data-id');
-                    if (id) socket.emit('join_chit_room', { group_id: parseInt(id) });
-                });
-            } catch(e) { console.error(e); }
-        });
-
         document.querySelectorAll('.member-chit-card').forEach(card => {
-            const id = card.getAttribute('data-id');
-            if (id) loadLedgerHistory(parseInt(id));
+            const id = parseInt(card.getAttribute('data-id'));
+            if (id) {
+                loadLedgerHistory(id);
+                setInterval(() => { pollRoomState(id); }, 2000);
+            }
         });
 
-        function submitIncrement(groupId, value) { if(socket) socket.emit('place_incremental_bid', { group_id: parseInt(groupId), increment: parseFloat(value) }); }
-        function submitCustomIncrement(groupId) { const f = document.getElementById(`custom-inc-${groupId}`); submitIncrement(groupId, f.value.trim()); f.value = ''; }
+        async function pollRoomState(groupId) {
+            try {
+                const res = await fetch(`/api/chit/room-state/${groupId}`);
+                const data = await res.json();
+                if(!data.success) return;
+
+                const grid = document.getElementById(`bidding-grid-${groupId}`);
+                const badge = document.getElementById(`status-badge-${groupId}`);
+                
+                if(data.is_active) {
+                    grid.classList.remove('opacity-45', 'pointer-events-none', 'select-none');
+                    badge.innerHTML = `<span class="bg-emerald-950 text-emerald-400 border border-emerald-900 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider animate-pulse">● Live Bidding Open</span>`;
+                } else {
+                    grid.classList.add('opacity-45', 'pointer-events-none', 'select-none');
+                    badge.innerHTML = `<span class="bg-slate-900 text-slate-500 border border-slate-800 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider">🔒 Locked Until Next Schedule</span>`;
+                }
+
+                document.getElementById(`member-val-${groupId}`).innerText = "₹" + data.highest_bid.toLocaleString('en-IN');
+                document.getElementById(`member-lbl-${groupId}`).innerText = "🏆 Standing: " + data.highest_bidder;
+
+                const stream = document.getElementById(`live-stream-${groupId}`);
+                if(data.bids.length > 0 && stream) {
+                    stream.innerHTML = '';
+                    data.bids.forEach(b => {
+                        stream.insertAdjacentHTML('beforeend', `<div class="flex justify-between bg-slate-950 p-1.5 rounded-lg border border-slate-800/40"><span><b>${b.name}</b> +₹${b.increment.toLocaleString('en-IN')}</span><span>₹${b.total.toLocaleString('en-IN')}</span></div>`);
+                    });
+                }
+            } catch(e){}
+        }
+
+        async function submitIncrement(groupId, value) {
+            await fetch('/api/chit/place-bid', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({group_id: groupId, increment: parseFloat(value)}) });
+            pollRoomState(groupId);
+        }
 
         async function loadLedgerHistory(groupId) {
-            const cleanId = parseInt(groupId);
-            const res = await fetch(`/api/chit/history/${cleanId}`); const result = await res.json();
-            const tbody = document.getElementById(`ledger-body-${cleanId}`);
+            const res = await fetch(`/api/chit/history/${groupId}`); const result = await res.json();
+            const tbody = document.getElementById(`ledger-body-${groupId}`);
             const myName = document.getElementById('profile-name').innerText.trim();
-            if (!tbody) return;
+            if (!tbody || !result.success || result.history.length === 0) return;
 
-            if (result.success && result.history.length > 0) {
-                tbody.innerHTML = '';
-                const historyWinners = result.history.map(item => item.winner);
-                const latestCycle = result.history[result.history.length - 1];
-                generateSettlementQR(cleanId, latestCycle, myName, result.base_installment, historyWinners);
+            tbody.innerHTML = '';
+            const historyWinners = result.history.map(item => item.winner);
+            const latestCycle = result.history[result.history.length - 1];
+            generateSettlementQR(groupId, latestCycle, myName, result.base_installment, historyWinners);
 
-                result.history.forEach(item => {
-                    let dueLabel = "";
-                    if (myName === item.winner) { dueLabel = "₹0 (Won)"; }
-                    else if (historyWinners.slice(0, item.month - 1).includes(myName)) { dueLabel = "₹" + result.base_installment.toLocaleString('en-IN') + " (Full)"; }
-                    else { dueLabel = "₹" + item.due_non_winner.toLocaleString('en-IN') + " (Discounted)"; }
+            result.history.forEach(item => {
+                let dueLabel = "";
+                if (myName === item.winner) dueLabel = "₹0 (Won)";
+                else if (historyWinners.slice(0, item.month - 1).includes(myName)) dueLabel = "₹" + result.base_installment.toLocaleString('en-IN') + " (Full)";
+                else dueLabel = "₹" + item.due_non_winner.toLocaleString('en-IN') + " (Discounted)";
 
-                    tbody.insertAdjacentHTML('beforeend', `<tr class="hover:bg-slate-900/40 border-b border-slate-800/40"><td class="p-3 text-slate-400 font-mono">Month ${item.month}</td><td class="p-3 text-white font-bold">${item.winner || "History Entry"}</td><td class="p-3 text-center font-mono">₹${Number(item.bid).toLocaleString('en-IN')}</td><td class="p-3 text-center text-amber-500 font-mono">₹${Number(item.agent_fee).toLocaleString('en-IN')}</td><td class="p-3 text-center text-teal-400 font-mono">₹${Number(item.dividend_per_head).toLocaleString('en-IN')}</td><td class="p-3 text-center font-mono text-indigo-400">${dueLabel}</td></tr>`);
-                });
-            } else {
-                tbody.innerHTML = '<tr class="member-ledger-placeholder"><td colspan="6" class="text-center p-8 text-slate-600 italic font-mono">No cycles closed yet.</td></tr>';
-            }
+                tbody.insertAdjacentHTML('beforeend', `<tr class="hover:bg-slate-900/40 border-b border-slate-800/40"><td class="p-3 text-slate-400 font-mono">Month ${item.month}</td><td class="p-3 text-white font-bold">${item.winner || "History Entry"}</td><td class="p-3 text-center font-mono">₹${Number(item.bid).toLocaleString('en-IN')}</td><td class="p-3 text-center text-amber-500 font-mono">₹${Number(item.agent_fee).toLocaleString('en-IN')}</td><td class="p-3 text-center text-teal-400 font-mono">₹${Number(item.dividend_per_head).toLocaleString('en-IN')}</td><td class="p-3 text-center font-mono text-indigo-400">${dueLabel}</td></tr>`);
+            });
         }
 
         function generateSettlementQR(groupId, cycle, myName, baseInstallment, historyWinners) {
@@ -220,7 +189,6 @@
             qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiString)}" alt="Scan to Pay" class="w-32 h-32 rounded-lg border">`;
             if(titleContainer) titleContainer.innerText = titleText;
         }
-        if (socket) socket.on('room_closed', function() { window.location.reload(); });
     </script>
 </body>
 </html>
