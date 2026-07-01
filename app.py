@@ -8,18 +8,32 @@ from werkzeug.security import generate_password_hash, check_password_hash
 app = Flask(__name__)
 app.config['SECRET_KEY'] = 'chithub_multi_group_secure_key_2026'
 
-# VERCEL PRODUCTION DATABASE ROUTING
+# VERCEL PRODUCTION DATABASE POOLING OPTIMIZATION
 DATABASE_URL = os.environ.get('DATABASE_URL')
 if DATABASE_URL and DATABASE_URL.startswith("postgres://"):
     DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
 
+# Added connection pooling parameters to prevent database connection exhaustion delays
 app.config['SQLALCHEMY_DATABASE_URI'] = DATABASE_URL or 'sqlite:///chithub_multi.db'
 app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
+    "pool_size": 10,
+    "max_overflow": 20,
+    "pool_recycle": 280
+}
 
 db = SQLAlchemy(app)
-socketio = SocketIO(app, cors_allowed_origins="*", async_mode='eventlet')
 
-SECRET_CHIT_CODE = "GRAMA2026"
+# Optimized SocketIO initialization parameters specifically tailored for serverless platforms
+socketio = SocketIO(
+    app, 
+    cors_allowed_origins="*", 
+    async_mode='eventlet',
+    transports=['websocket', 'polling'],
+    ping_timeout=10,
+    ping_interval=5
+)
+
 LIVE_BID_LOGS = {} 
 
 # ================= RELATIONAL DATA SCHEMAS =================
@@ -82,16 +96,13 @@ def index():
 @app.route('/dashboard')
 def dashboard():
     if 'user_id' not in session: return redirect(url_for('index'))
-    
-    # 🚀 ADMINISTRATIVE DECK SPEED OPTIMIZATION
     if session.get('user_status') == 'admin':
-        groups = ChitGroup.query.all()
+        groups = ChitGroup.query.order_by(ChitGroup.id.desc()).all()
         return render_template('multi_admin.html', admin_name=session.get('user_name'), groups=groups)
     
-    # 🚀 MEMBER DASHBOARD SPEED OPTIMIZATION
     allocated_groups = db.session.query(ChitGroup).join(
         GroupMembership, ChitGroup.id == GroupMembership.group_id
-    ).filter(GroupMembership.user_id == session['user_id']).all()
+    ).filter(GroupMembership.user_id == session['user_id']).order_by(ChitGroup.id.desc()).all()
     
     return render_template('member_room.html', user_name=session.get('user_name'), groups=allocated_groups)
 
@@ -160,13 +171,16 @@ def inject_history():
         db.session.add(h)
         db.session.commit()
 
-        socketio.emit('history_updated', {'group_id': g.id}, to=str(g.id))
+        try:
+            socketio.emit('history_updated', {'group_id': g.id}, to=str(g.id))
+        except:
+            pass
         return jsonify({'success': True})
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
 
-# ================= BACKEND DATABASE ROW DELETION TOOL =================
+# ================= ADMINISTRATIVE ROW DELETION TOOL =================
 
 @app.route('/api/admin/delete-history/<int:history_id>', methods=['POST'])
 def delete_history(history_id):
@@ -177,16 +191,18 @@ def delete_history(history_id):
             group_id = h.group_id
             db.session.delete(h)
             
-            # Automatically calculate and shift the active current month block back 
             remaining = ChitHistory.query.filter_by(group_id=group_id).order_by(ChitHistory.month_number.desc()).first()
             g = ChitGroup.query.get(group_id)
             if g:
                 g.current_month = (remaining.month_number + 1) if remaining else 1
                 
             db.session.commit()
-            socketio.emit('history_updated', {'group_id': group_id}, to=str(group_id))
+            try:
+                socketio.emit('history_updated', {'group_id': group_id}, to=str(group_id))
+            except:
+                pass
             return jsonify({'success': True, 'group_id': group_id})
-        return jsonify({'success': False, 'message': 'Record segment node not found.'}), 404
+        return jsonify({'success': False, 'message': 'Record not found.'}), 404
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
@@ -293,39 +309,20 @@ def finalize_room(data):
     if g and g.is_active:
         g.is_active = False
         base_installment = g.total_pool / g.total_members  
-        
-        # Speed-optimized scalar query
         past_winners_count = db.session.query(db.func.count(ChitHistory.id)).filter_by(group_id=g.id).scalar()
-        
         dividend_sharing_members = (g.total_members - past_winners_count) - 1 
         AGENT_FIXED_FEE = 1000.0
         net_dividend_pool = g.highest_bid - AGENT_FIXED_FEE 
-        
         dividend_discount = (net_dividend_pool / dividend_sharing_members) if dividend_sharing_members > 0 else 0.0
         final_due_for_non_winners = base_installment - dividend_discount
         final_payout = g.total_pool - g.highest_bid
 
         try:
-            h = ChitHistory(
-                group_id=g.id, month_number=g.current_month, winner_name=g.highest_bidder_name,
-                winning_bid=g.highest_bid, payable_per_member=round(final_due_for_non_winners, 2), 
-                payout_to_winner=round(final_payout, 2), agent_fee=AGENT_FIXED_FEE, dividend_per_head=round(dividend_discount, 2)
-            )
-            g.current_month += 1
-            db.session.add(h)
-            db.session.commit()
-            
-            if str(g.id) in LIVE_BID_LOGS: 
-                del LIVE_BID_LOGS[str(g.id)]
-
-            emit('room_closed', {
-                'group_id': g.id, 'winner': h.winner_name, 'bid': h.winning_bid, 
-                'due_non_winner': h.payable_per_member, 'due_past_winner': round(base_installment, 2), 
-                'payout': h.payout_to_winner, 'agent_fee': AGENT_FIXED_FEE, 'div_discount': round(dividend_discount, 2)
-            }, to=str(g.id))
-        except Exception as e:
-            db.session.rollback()
-            print(e)
+            h = ChitHistory(group_id=g.id, month_number=g.current_month, winner_name=g.highest_bidder_name, winning_bid=g.highest_bid, payable_per_member=round(final_due_for_non_winners, 2), payout_to_winner=round(final_payout, 2), agent_fee=AGENT_FIXED_FEE, dividend_per_head=round(dividend_discount, 2))
+            g.current_month += 1; db.session.add(h); db.session.commit()
+            if str(g.id) in LIVE_BID_LOGS: del LIVE_BID_LOGS[str(g.id)]
+            emit('room_closed', {'group_id': g.id, 'winner': h.winner_name, 'bid': h.winning_bid, 'due_non_winner': h.payable_per_member, 'due_past_winner': round(base_installment, 2), 'payout': h.payout_to_winner, 'agent_fee': AGENT_FIXED_FEE, 'div_discount': round(dividend_discount, 2)}, to=str(g.id))
+        except Exception as e: db.session.rollback(); print(e)
 
 if __name__ == '__main__':
     socketio.run(app, debug=True, port=5000)
