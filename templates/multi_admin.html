@@ -277,7 +277,7 @@
             const groupId = document.getElementById('modal-group-id').value; 
             const checkNodes = document.querySelectorAll('.user-check-node:checked'); 
             const userIds = Array.from(checkNodes).map(node => parseInt(node.value)); 
-            const res = await fetch('/api/update-membership', { 
+            const res = await fetch('/api/admin/update-membership', { 
                 method: 'POST', 
                 headers: {'Content-Type': 'application/json'}, 
                 body: JSON.stringify({ group_id: parseInt(groupId), user_ids: userIds }) 
