@@ -85,8 +85,8 @@ def shutdown_session(exception=None):
 
 with app.app_context():
     db.create_all()
-    if not User.query.filter_by(phone="9999999999").first():
-        db.session.add(User(name="Chit Organizer", phone="9999999999", password_hash=generate_password_hash("admin123", method='pbkdf2:sha256'), status="admin"))
+    if not User.query.filter_by(phone="9686193049").first():
+        db.session.add(User(name="Chit Organizer", phone="9686193049", password_hash=generate_password_hash("Life@789", method='pbkdf2:sha256'), status="admin"))
         db.session.commit()
 
 # ================= AUTHENTICATION MAPS =================
