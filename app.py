@@ -23,6 +23,13 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 }
 
 db = SQLAlchemy(app)
+# app.py - Global Config Area
+
+db = SQLAlchemy(app)
+
+# Add this variable declaration right back into the file:
+SECRET_CHIT_CODE = "GRAMA2026"
+LIVE_BID_LOGS = {}
 
 # ================= RELATIONAL DATA SCHEMAS =================
 
