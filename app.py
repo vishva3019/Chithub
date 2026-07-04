@@ -34,13 +34,12 @@ LIVE_BID_LOGS = {}
 # ================= RELATIONAL DATA SCHEMAS =================
 
 class User(db.Model):
-    __tablename__ = 'user'
-    # FIXED: Restored clean, standard primary key syntax for flawless PostgreSQL autoincrement mapping
+    __tablename__ = 'chithub_users'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(100), nullable=False)
     phone = db.Column(db.String(15), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
-    status = db.Column(db.String(20), default='approved') 
+    status = db.Column(db.String(20), default='approved')
 
 class ChitGroup(db.Model):
     __tablename__ = 'chit_group'
