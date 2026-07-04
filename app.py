@@ -104,18 +104,32 @@ def dashboard():
 
 @app.route('/api/register', methods=['POST'])
 def register():
-    data = request.get_json() or {}
-    name, phone, password, access_code = data.get('name'), data.get('phone'), data.get('password'), data.get('access_code')
-    if not all([name, phone, password, access_code]) or access_code.strip().upper() != SECRET_CHIT_CODE:
-        return jsonify({'success': False, 'message': 'Validation error.'}), 400
-    if User.query.filter_by(phone=phone).first(): return jsonify({'success': False, 'message': 'Already registered.'}), 400
+    # Enforces absolute error visibility across the entire execution boundary
     try:
-        db.session.add(User(name=name, phone=phone, password_hash=generate_password_hash(password, method='pbkdf2:sha256')))
+        data = request.get_json() or {}
+        name, phone, password, access_code = data.get('name'), data.get('phone'), data.get('password'), data.get('access_code')
+        
+        if not all([name, phone, password, access_code]) or access_code.strip().upper() != SECRET_CHIT_CODE:
+            return jsonify({'success': False, 'message': 'Validation error. Check input variables.'}), 400
+            
+        # Protected database lookup block
+        existing_user = User.query.filter_by(phone=phone).first()
+        if existing_user: 
+            return jsonify({'success': False, 'message': 'This mobile number is already registered.'}), 400
+            
+        new_user = User(
+            name=name, 
+            phone=phone, 
+            password_hash=generate_password_hash(password, method='pbkdf2:sha256')
+        )
+        db.session.add(new_user)
         db.session.commit()
         return jsonify({'success': True}), 201
+        
     except Exception as e:
         db.session.rollback()
-        return jsonify({'success': False, 'message': str(e)}), 500
+        # Explicitly packages the exact underlying SQL trace error into clear JSON
+        return jsonify({'success': False, 'message': f"Server/Database Error: {str(e)}"}), 500
 
 @app.route('/api/login', methods=['POST'])
 def login():
