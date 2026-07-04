@@ -23,23 +23,20 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 }
 
 db = SQLAlchemy(app)
-# app.py - Global Config Area
 
-db = SQLAlchemy(app)
-
-# Add this variable declaration right back into the file:
 SECRET_CHIT_CODE = "GRAMA2026"
 LIVE_BID_LOGS = {}
 
 # ================= RELATIONAL DATA SCHEMAS =================
 
 class User(db.Model):
-    __tablename__ = 'chithub_users'
+    # SAFE FROM POSTGRES KEYWORD RESERVATION CONFLICTS
+    __tablename__ = 'chithub_members'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(100), nullable=False)
     phone = db.Column(db.String(15), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
-    status = db.Column(db.String(20), default='approved')
+    status = db.Column(db.String(20), default='approved') 
 
 class ChitGroup(db.Model):
     __tablename__ = 'chit_group'
@@ -58,7 +55,7 @@ class GroupMembership(db.Model):
     __tablename__ = 'group_membership'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     group_id = db.Column(db.Integer, db.ForeignKey('chit_group.id', ondelete='CASCADE'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('chithub_users.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('chithub_members.id', ondelete='CASCADE'), nullable=False)
 
 class ChitHistory(db.Model):
     __tablename__ = 'chit_history'
@@ -110,31 +107,24 @@ def dashboard():
 
 @app.route('/api/register', methods=['POST'])
 def register():
-    # Enforces absolute error visibility across the entire execution boundary
     try:
         data = request.get_json() or {}
         name, phone, password, access_code = data.get('name'), data.get('phone'), data.get('password'), data.get('access_code')
         
         if not all([name, phone, password, access_code]) or access_code.strip().upper() != SECRET_CHIT_CODE:
-            return jsonify({'success': False, 'message': 'Validation error. Check input variables.'}), 400
+            return jsonify({'success': False, 'message': 'Validation error. Check input fields.'}), 400
             
-        # Protected database lookup block
         existing_user = User.query.filter_by(phone=phone).first()
         if existing_user: 
             return jsonify({'success': False, 'message': 'This mobile number is already registered.'}), 400
             
-        new_user = User(
-            name=name, 
-            phone=phone, 
-            password_hash=generate_password_hash(password, method='pbkdf2:sha256')
-        )
+        new_user = User(name=name, phone=phone, password_hash=generate_password_hash(password, method='pbkdf2:sha256'))
         db.session.add(new_user)
         db.session.commit()
         return jsonify({'success': True}), 201
         
     except Exception as e:
         db.session.rollback()
-        # Explicitly packages the exact underlying SQL trace error into clear JSON
         return jsonify({'success': False, 'message': f"Server/Database Error: {str(e)}"}), 500
 
 @app.route('/api/login', methods=['POST'])
