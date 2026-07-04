@@ -87,29 +87,42 @@
         }
 
         async function executeRegistration() {
-            const name = document.getElementById('reg-name').value.trim();
-            const phone = document.getElementById('reg-phone').value.trim();
-            const password = document.getElementById('reg-pass').value.trim();
-            const access_code = document.getElementById('reg-code').value.trim();
+    const name = document.getElementById('reg-name').value.trim();
+    const phone = document.getElementById('reg-phone').value.trim();
+    const password = document.getElementById('reg-pass').value.trim();
+    const access_code = document.getElementById('reg-code').value.trim();
 
-            if(!name || !phone || !password || !access_code) return alert("Please populate all profile creation fields.");
+    if(!name || !phone || !password || !access_code) return alert("Please populate all profile creation fields.");
 
-            try {
-                const res = await fetch('/api/register', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ name, phone, password, access_code })
-                });
-                const data = await res.json();
-                if(res.status === 201 || data.success) {
-                    alert("🎉 Registration profile mapped successfully! Please log in.");
-                    togglePanels();
-                    document.getElementById('login-phone').value = phone;
-                } else {
-                    alert(data.message || "Registration parameter exception code mismatch profile block rejection.");
-                }
-            } catch(e) { alert("Communication block: Packet submission processing failure."); }
+    try {
+        const res = await fetch('/api/register', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ name, phone, password, access_code })
+        });
+        
+        // Read response as plain text first to safely check for structural errors
+        const responseText = await res.text();
+        let data;
+        
+        try {
+            data = JSON.parse(responseText);
+        } catch(jsonParseError) {
+            // Safely surfaces raw HTML trace errors directly onto the screen if the server crashes
+            return alert("⚠️ Database Schema Mismatch Error:\n\n" + responseText.substring(0, 300));
         }
+
+        if(res.status === 201 || data.success) {
+            alert("🎉 Registration profile mapped successfully! Please log in.");
+            togglePanels();
+            document.getElementById('login-phone').value = phone;
+        } else {
+            alert("❌ Rejection: " + (data.message || "Registration parameter exception."));
+        }
+    } catch(e) { 
+        alert("Communication block: Packet submission processing network failure."); 
+    }
+}
     </script>
 </body>
 </html>
