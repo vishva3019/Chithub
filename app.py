@@ -58,7 +58,7 @@ class GroupMembership(db.Model):
     __tablename__ = 'group_membership'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     group_id = db.Column(db.Integer, db.ForeignKey('chit_group.id', ondelete='CASCADE'), nullable=False)
-    user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
+    user_id = db.Column(db.Integer, db.ForeignKey('chithub_users.id', ondelete='CASCADE'), nullable=False)
 
 class ChitHistory(db.Model):
     __tablename__ = 'chit_history'
