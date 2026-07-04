@@ -27,14 +27,17 @@ db = SQLAlchemy(app)
 # ================= RELATIONAL DATA SCHEMAS =================
 
 class User(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    __tablename__ = 'user'
+    # FIXED: Restored clean, standard primary key syntax for flawless PostgreSQL autoincrement mapping
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(100), nullable=False)
     phone = db.Column(db.String(15), unique=True, nullable=False)
     password_hash = db.Column(db.String(200), nullable=False)
     status = db.Column(db.String(20), default='approved') 
 
 class ChitGroup(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    __tablename__ = 'chit_group'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(100), unique=True, nullable=False) 
     total_pool = db.Column(db.Float, nullable=False)             
     total_members = db.Column(db.Integer, nullable=False)         
@@ -46,12 +49,14 @@ class ChitGroup(db.Model):
     scheduled_time = db.Column(db.String(100), default="Not Scheduled")
 
 class GroupMembership(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    __tablename__ = 'group_membership'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     group_id = db.Column(db.Integer, db.ForeignKey('chit_group.id', ondelete='CASCADE'), nullable=False)
     user_id = db.Column(db.Integer, db.ForeignKey('user.id', ondelete='CASCADE'), nullable=False)
 
 class ChitHistory(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    __tablename__ = 'chit_history'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     group_id = db.Column(db.Integer, db.ForeignKey('chit_group.id'))
     month_number = db.Column(db.Integer)
     winner_name = db.Column(db.String(100))
@@ -62,7 +67,8 @@ class ChitHistory(db.Model):
     dividend_per_head = db.Column(db.Float, default=0.0)        
 
 class LiveBidTrail(db.Model):
-    id = db.Column(db.Integer, primary_key=True)
+    __tablename__ = 'live_bid_trail'
+    id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     group_id = db.Column(db.Integer, nullable=False)
     bidder_name = db.Column(db.String(100))
     increment_value = db.Column(db.Float)
@@ -107,13 +113,15 @@ def register():
         db.session.add(User(name=name, phone=phone, password_hash=generate_password_hash(password, method='pbkdf2:sha256')))
         db.session.commit()
         return jsonify({'success': True}), 201
-    except: return jsonify({'success': False}), 500
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
 
 @app.route('/api/login', methods=['POST'])
 def login():
     data = request.get_json() or {}
     u = User.query.filter_by(phone=data.get('phone')).first()
-    if not u or not check_password_hash(u.password_hash, data.get('password')): return jsonify({'success': False}), 401
+    if not u or not check_password_hash(u.password_hash, data.get('password')): return jsonify({'success': False, 'message': 'Invalid credentials.'}), 401
     session['user_id'], session['user_name'], session['user_status'] = u.id, u.name, u.status
     return jsonify({'success': True, 'redirect': url_for('dashboard')}), 200
 
