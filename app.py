@@ -24,13 +24,12 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 
 db = SQLAlchemy(app)
 
-SECRET_CHIT_CODE = "CHIT2026"
+SECRET_CHIT_CODE = "GRAMA2026"
 LIVE_BID_LOGS = {}
 
 # ================= RELATIONAL DATA SCHEMAS =================
 
 class User(db.Model):
-    # SAFE FROM POSTGRES KEYWORD RESERVATION CONFLICTS
     __tablename__ = 'chithub_members'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
     name = db.Column(db.String(100), nullable=False)
@@ -60,7 +59,6 @@ class GroupMembership(db.Model):
 class ChitHistory(db.Model):
     __tablename__ = 'chit_history'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    # 🚀 FIXED: Added ondelete='CASCADE' to break foreign key deadlocks cleanly
     group_id = db.Column(db.Integer, db.ForeignKey('chit_group.id', ondelete='CASCADE'))
     month_number = db.Column(db.Integer)
     winner_name = db.Column(db.String(100))
@@ -68,7 +66,7 @@ class ChitHistory(db.Model):
     payable_per_member = db.Column(db.Float)
     payout_to_winner = db.Column(db.Float)
     agent_fee = db.Column(db.Float, default=1000.0)             
-    dividend_per_head = db.Column(db.Float, default=0.0)    
+    dividend_per_head = db.Column(db.Float, default=0.0)        
 
 class LiveBidTrail(db.Model):
     __tablename__ = 'live_bid_trail'
@@ -86,8 +84,8 @@ def shutdown_session(exception=None):
 
 with app.app_context():
     db.create_all()
-    if not User.query.filter_by(phone="9686193049").first():
-        db.session.add(User(name="Chit Organizer", phone="9686193049", password_hash=generate_password_hash("Life@789", method='pbkdf2:sha256'), status="admin"))
+    if not User.query.filter_by(phone="9999999999").first():
+        db.session.add(User(name="Chit Organizer", phone="9999999999", password_hash=generate_password_hash("admin123", method='pbkdf2:sha256'), status="admin"))
         db.session.commit()
 
 # ================= AUTHENTICATION MAPS =================
@@ -113,7 +111,7 @@ def register():
         name, phone, password, access_code = data.get('name'), data.get('phone'), data.get('password'), data.get('access_code')
         
         if not all([name, phone, password, access_code]) or access_code.strip().upper() != SECRET_CHIT_CODE:
-            return jsonify({'success': False, 'message': 'Validation error. Check input fields.'}), 400
+            return jsonify({'success': False, 'message': 'Validation error. Check inputs.'}), 400
             
         existing_user = User.query.filter_by(phone=phone).first()
         if existing_user: 
@@ -199,6 +197,20 @@ def room_control():
 
 # ================= DATA CONTEXT MANAGER CORE API NODES =================
 
+@app.route('/api/admin/delete-group/<int:group_id>', methods=['POST'])
+def delete_group(group_id):
+    if session.get('user_status') != 'admin': return jsonify({'success': False}), 403
+    try:
+        g = ChitGroup.query.get(group_id)
+        if g:
+            db.session.delete(g)
+            db.session.commit()
+            return jsonify({'success': True})
+        return jsonify({'success': False}), 404
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 @app.route('/api/admin/inject-history', methods=['POST'])
 def inject_history():
     if session.get('user_status') != 'admin': return jsonify({'success': False}), 403
@@ -262,22 +274,12 @@ def update_membership():
     if session.get('user_status') != 'admin': return jsonify({'success': False}), 403
     data = request.get_json() or {}
     group_id, selected_user_ids = int(data.get('group_id')), [int(uid) for uid in data.get('user_ids', [])]
-    GroupMembership.query.filter_by(group_id=group_id).delete()
-    for uid in selected_user_ids: db.session.add(GroupMembership(group_id=group_id, user_id=uid))
-    db.session.commit()
-    return jsonify({'success': True})
-
-@app.route('/api/admin/delete-group/<int:group_id>', methods=['POST'])
-def delete_group(group_id):
-    if session.get('user_status') != 'admin': 
-        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
     try:
-        g = ChitGroup.query.get(group_id)
-        if g:
-            db.session.delete(g)
-            db.session.commit()
-            return jsonify({'success': True})
-        return jsonify({'success': False, 'message': 'Group not found.'}), 404
+        GroupMembership.query.filter_by(group_id=group_id).delete()
+        for uid in selected_user_ids: 
+            db.session.add(GroupMembership(group_id=group_id, user_id=uid))
+        db.session.commit()
+        return jsonify({'success': True})
     except Exception as e:
         db.session.rollback()
         return jsonify({'success': False, 'message': str(e)}), 500
