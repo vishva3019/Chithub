@@ -266,6 +266,21 @@ def update_membership():
     db.session.commit()
     return jsonify({'success': True})
 
+@app.route('/api/admin/delete-group/<int:group_id>', methods=['POST'])
+def delete_group(group_id):
+    if session.get('user_status') != 'admin': 
+        return jsonify({'success': False, 'message': 'Unauthorized'}), 403
+    try:
+        g = ChitGroup.query.get(group_id)
+        if g:
+            db.session.delete(g)
+            db.session.commit()
+            return jsonify({'success': True})
+        return jsonify({'success': False, 'message': 'Group not found.'}), 404
+    except Exception as e:
+        db.session.rollback()
+        return jsonify({'success': False, 'message': str(e)}), 500
+
 @app.route('/api/chit/history/<int:group_id>')
 def get_group_history(group_id):
     records = ChitHistory.query.filter_by(group_id=group_id).order_by(ChitHistory.month_number.asc()).all()
