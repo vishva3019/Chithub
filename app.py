@@ -60,14 +60,15 @@ class GroupMembership(db.Model):
 class ChitHistory(db.Model):
     __tablename__ = 'chit_history'
     id = db.Column(db.Integer, primary_key=True, autoincrement=True)
-    group_id = db.Column(db.Integer, db.ForeignKey('chit_group.id'))
+    # 🚀 FIXED: Added ondelete='CASCADE' to break foreign key deadlocks cleanly
+    group_id = db.Column(db.Integer, db.ForeignKey('chit_group.id', ondelete='CASCADE'))
     month_number = db.Column(db.Integer)
     winner_name = db.Column(db.String(100))
     winning_bid = db.Column(db.Float)
     payable_per_member = db.Column(db.Float)
     payout_to_winner = db.Column(db.Float)
     agent_fee = db.Column(db.Float, default=1000.0)             
-    dividend_per_head = db.Column(db.Float, default=0.0)        
+    dividend_per_head = db.Column(db.Float, default=0.0)    
 
 class LiveBidTrail(db.Model):
     __tablename__ = 'live_bid_trail'
