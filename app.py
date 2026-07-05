@@ -88,16 +88,20 @@ with app.app_context():
         db.session.add(User(name="Chit Organizer", phone="9999999999", password_hash=generate_password_hash("admin123", method='pbkdf2:sha256'), status="admin"))
         db.session.commit()
 
-# ================= AUTHENTICATION MAPS =================
+# ================= ROUTING AND AUTHENTICATION MAPS =================
 
+# 1. NEW: Public Marketing Landing Page (The Front Door)
 @app.route('/')
 def index():
-    if 'user_id' in session: return redirect(url_for('dashboard'))
-    return render_template('login.html')
+    if 'user_id' in session: 
+        return redirect(url_for('dashboard'))
+    return render_template('index.html')
 
+# 2. UPDATED: Internal Authenticated Session router
 @app.route('/dashboard')
 def dashboard():
-    if 'user_id' not in session: return redirect(url_for('index'))
+    if 'user_id' not in session: 
+        return redirect(url_for('index'))
     if session.get('user_status') == 'admin':
         return render_template('multi_admin.html', admin_name=session.get('user_name'), groups=ChitGroup.query.order_by(ChitGroup.id.desc()).all())
     
@@ -130,7 +134,8 @@ def register():
 def login():
     data = request.get_json() or {}
     u = User.query.filter_by(phone=data.get('phone')).first()
-    if not u or not check_password_hash(u.password_hash, data.get('password')): return jsonify({'success': False, 'message': 'Invalid credentials.'}), 401
+    if not u or not check_password_hash(u.password_hash, data.get('password')): 
+        return jsonify({'success': False, 'message': 'Invalid credentials.'}), 401
     session['user_id'], session['user_name'], session['user_status'] = u.id, u.name, u.status
     return jsonify({'success': True, 'redirect': url_for('dashboard')}), 200
 
@@ -291,4 +296,9 @@ def get_group_history(group_id):
     return jsonify({'success': True, 'base_installment': (g.total_pool / g.total_members) if g else 0, 'history': [{'id': r.id, 'month': r.month_number, 'winner': r.winner_name, 'bid': r.winning_bid, 'due_non_winner': r.payable_per_member, 'payout': r.payout_to_winner, 'agent_fee': r.agent_fee, 'dividend_per_head': r.dividend_per_head} for r in records]})
 
 @app.route('/logout')
-def logout(): session.clear(); return redirect(url_for('index'))
+def logout(): 
+    session.clear()
+    return redirect(url_for('index'))
+
+if __name__ == "__main__":
+    app.run(debug=True)
