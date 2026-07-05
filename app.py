@@ -130,15 +130,29 @@ def register():
         db.session.rollback()
         return jsonify({'success': False, 'message': f"Server/Database Error: {str(e)}"}), 500
 
-@app.route('/api/login', methods=['POST'])
+# ==================================================
+# UPDATED LOGIN ROUTE (HANDLES BOTH GET & POST)
+# ==================================================
+@app.route('/login', methods=['GET', 'POST'])
 def login():
-    data = request.get_json() or {}
-    u = User.query.filter_by(phone=data.get('phone')).first()
-    if not u or not check_password_hash(u.password_hash, data.get('password')): 
-        return jsonify({'success': False, 'message': 'Invalid credentials.'}), 401
-    session['user_id'], session['user_name'], session['user_status'] = u.id, u.name, u.status
-    return jsonify({'success': True, 'redirect': url_for('dashboard')}), 200
+    if request.method == 'POST':
+        data = request.get_json() or {}
+        phone = data.get('phone')
+        password = data.get('password')
 
+        u = User.query.filter_by(phone=phone).first()
+        if not u or not check_password_hash(u.password_hash, password): 
+            return jsonify({'success': False, 'message': 'Invalid credentials.'}), 401
+            
+        session['user_id'] = u.id
+        session['user_name'] = u.name
+        session['user_status'] = u.status
+        return jsonify({'success': True, 'redirect': url_for('dashboard')}), 200
+
+    # If it's a GET request (someone visiting the page), render the form
+    if 'user_id' in session: 
+        return redirect(url_for('dashboard'))
+    return render_template('login.html')
 # ================= STATE POLL SYNCHRONIZER REST ENDPOINTS =================
 
 @app.route('/api/chit/room-state/<int:group_id>')
