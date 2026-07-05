@@ -4,6 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ChitHub - Authentication</title>
+    <!-- 🚀 FIXED: Re-added Tailwind Engine Script -->
     <script src="https://cdn.tailwindcss.com"></script>
     <style>
         .premium-bg {
@@ -25,11 +26,12 @@
             <p class="text-xs text-slate-400 tracking-wide uppercase font-semibold">Digital Community Savings Portal</p>
         </div>
 
+        <!-- LOGIN FORM NODE CARD -->
         <div id="login-panel" class="space-y-4">
             <h3 class="text-sm font-bold text-slate-300 uppercase tracking-widest border-b border-slate-900 pb-2">Account Login Gateway</h3>
             <div>
                 <label class="block text-[10px] font-black uppercase text-slate-400 mb-1 tracking-wider">Mobile Phone Number</label>
-                <input type="text" id="login-phone" placeholder="Mobile Number" class="w-full bg-slate-900/60 border border-slate-800 p-3 rounded-xl text-sm text-white outline-none focus:border-indigo-500 font-mono">
+                <input type="text" id="login-phone" placeholder="9876543210" class="w-full bg-slate-900/60 border border-slate-800 p-3 rounded-xl text-sm text-white outline-none focus:border-indigo-500 font-mono">
             </div>
             <div>
                 <label class="block text-[10px] font-black uppercase text-slate-400 mb-1 tracking-wider">Account Password</label>
@@ -39,15 +41,16 @@
             <p class="text-center text-xs text-slate-500 mt-4 font-semibold">New here? <button onclick="togglePanels()" class="text-indigo-400 hover:underline">Create a savings profile</button></p>
         </div>
 
+        <!-- SIGNUP FORM NODE CARD -->
         <div id="signup-panel" class="space-y-4 hidden">
             <h3 class="text-sm font-bold text-slate-300 uppercase tracking-widest border-b border-slate-900 pb-2">Membership Profile</h3>
             <div>
                 <label class="block text-[10px] font-black uppercase text-slate-400 mb-1 tracking-wider">Full Legal Name</label>
-                <input type="text" id="reg-name" placeholder="User Name" class="w-full bg-slate-900/60 border border-slate-800 p-3 rounded-xl text-sm text-white outline-none focus:border-indigo-500">
+                <input type="text" id="reg-name" placeholder="e.g. Anand" class="w-full bg-slate-900/60 border border-slate-800 p-3 rounded-xl text-sm text-white outline-none focus:border-indigo-500">
             </div>
             <div>
                 <label class="block text-[10px] font-black uppercase text-slate-400 mb-1 tracking-wider">Mobile Phone Number</label>
-                <input type="text" id="reg-phone" placeholder="Mobile Number" class="w-full bg-slate-900/60 border border-slate-800 p-3 rounded-xl text-sm text-white outline-none focus:border-indigo-500 font-mono">
+                <input type="text" id="reg-phone" placeholder="9538427685" class="w-full bg-slate-900/60 border border-slate-800 p-3 rounded-xl text-sm text-white outline-none focus:border-indigo-500 font-mono">
             </div>
             <div>
                 <label class="block text-[10px] font-black uppercase text-slate-400 mb-1 tracking-wider">Choose Account Password</label>
@@ -55,7 +58,7 @@
             </div>
             <div>
                 <label class="block text-[10px] font-black uppercase text-slate-400 mb-1 tracking-wider">Secret Chit Scheme Access Code</label>
-                <input type="text" id="reg-code" placeholder="SECRET KEY" class="w-full bg-slate-900/60 border border-slate-800 p-3 rounded-xl text-sm text-white outline-none focus:border-indigo-500 font-mono uppercase">
+                <input type="text" id="reg-code" placeholder="GRAMA2026" class="w-full bg-slate-900/60 border border-slate-800 p-3 rounded-xl text-sm text-white outline-none focus:border-indigo-500 font-mono uppercase">
             </div>
             <button onclick="executeRegistration()" class="w-full bg-emerald-600 hover:bg-emerald-500 text-white font-black py-3 rounded-xl text-xs uppercase tracking-widest transition-all mt-2 shadow-md">Submit Registration Profile</button>
             <p class="text-center text-xs text-slate-500 mt-4 font-semibold">Already registered a profile? <button onclick="togglePanels()" class="text-indigo-400 hover:underline">Return to Login</button></p>
@@ -72,7 +75,7 @@
         async function executeLogin() {
             const phone = document.getElementById('login-phone').value.trim();
             const password = document.getElementById('login-pass').value.trim();
-            if(!phone || !password) return alert("Fill out credentials inputs layout context parameters.");
+            if(!phone || !password) return alert("Please fill out your credentials.");
 
             try {
                 const res = await fetch('/api/login', {
@@ -82,47 +85,45 @@
                 });
                 const data = await res.json();
                 if(data.success) { window.location.href = data.redirect; }
-                else { alert(data.message || "Authentication credentials authorization exception failure."); }
-            } catch(e) { alert("Network connection failure node exception."); }
+                else { alert(data.message || "Invalid credentials."); }
+            } catch(e) { alert("Network connection failure."); }
         }
 
         async function executeRegistration() {
-    const name = document.getElementById('reg-name').value.trim();
-    const phone = document.getElementById('reg-phone').value.trim();
-    const password = document.getElementById('reg-pass').value.trim();
-    const access_code = document.getElementById('reg-code').value.trim();
+            const name = document.getElementById('reg-name').value.trim();
+            const phone = document.getElementById('reg-phone').value.trim();
+            const password = document.getElementById('reg-pass').value.trim();
+            const access_code = document.getElementById('reg-code').value.trim();
 
-    if(!name || !phone || !password || !access_code) return alert("Please populate all profile creation fields.");
+            if(!name || !phone || !password || !access_code) return alert("Please populate all profile creation fields.");
 
-    try {
-        const res = await fetch('/api/register', {
-            method: 'POST',
-            headers: {'Content-Type': 'application/json'},
-            body: JSON.stringify({ name, phone, password, access_code })
-        });
-        
-        // Read response as plain text first to safely check for structural errors
-        const responseText = await res.text();
-        let data;
-        
-        try {
-            data = JSON.parse(responseText);
-        } catch(jsonParseError) {
-            // Safely surfaces raw HTML trace errors directly onto the screen if the server crashes
-            return alert("⚠️ Database Schema Mismatch Error:\n\n" + responseText.substring(0, 300));
+            try {
+                const res = await fetch('/api/register', {
+                    method: 'POST',
+                    headers: {'Content-Type': 'application/json'},
+                    body: JSON.stringify({ name, phone, password, access_code })
+                });
+                
+                const responseText = await res.text();
+                let data;
+                
+                try {
+                    data = JSON.parse(responseText);
+                } catch(jsonParseError) {
+                    return alert("⚠️ Database Schema Mismatch Error:\n\n" + responseText.substring(0, 300));
+                }
+
+                if(res.status === 201 || data.success) {
+                    alert("🎉 Registration profile mapped successfully! Please log in.");
+                    togglePanels();
+                    document.getElementById('login-phone').value = phone;
+                } else {
+                    alert("❌ Rejection: " + (data.message || "Registration parameter error."));
+                }
+            } catch(e) { 
+                alert("Communication block: Packet submission processing network failure."); 
+            }
         }
-
-        if(res.status === 201 || data.success) {
-            alert("🎉 Registration profile mapped successfully! Please log in.");
-            togglePanels();
-            document.getElementById('login-phone').value = phone;
-        } else {
-            alert("❌ Rejection: " + (data.message || "Registration parameter exception."));
-        }
-    } catch(e) { 
-        alert("Communication block: Packet submission processing network failure."); 
-    }
-}
     </script>
 </body>
 </html>
