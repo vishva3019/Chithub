@@ -266,12 +266,21 @@
 
         // FIXED: Added administrative scheme deletion engine hook handler
         async function deleteEntireScheme(groupId, groupName) {
-            if (confirm(`⚠️ CRITICAL RECOVERY OPERATION\n\nAre you sure you want to permanently delete "${groupName}"?\n\nThis will instantly shred all historical transaction ledgers, bid logs, and membership access matrices linked to this scheme.`)) {
-                // To keep database operations instant and safe without setting up separate global routes, we direct to Neon console query instructions.
-                alert(`To finalize this drop securely without breaking engine concurrency, run this single command inside your Neon SQL Editor panel:\n\nDELETE FROM chit_group WHERE id = ${groupId};`);
+    if (confirm(`⚠️ CRITICAL RECOVERY OPERATION\n\nAre you sure you want to permanently delete "${groupName}"?\n\nThis will instantly shred all historical transaction ledgers, bid logs, and membership access matrices linked to this scheme.`)) {
+        try {
+            const res = await fetch(`/api/admin/delete-group/${groupId}`, { method: 'POST' });
+            const data = await res.json();
+            if (data.success) {
+                alert("🗑️ Scheme completely purged from database.");
+                window.location.reload();
+            } else {
+                alert("Error deleting scheme: " + data.message);
             }
+        } catch (e) {
+            alert("Network error: Could not complete deletion request.");
         }
-
+    }
+}
         function generateInvite(id, name) { 
             const schedElement = document.getElementById('sched-lbl-' + id);
             const currentSchedule = schedElement ? schedElement.innerText.trim() : "📅 Pending Schedule";
