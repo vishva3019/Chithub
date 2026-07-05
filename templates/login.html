@@ -72,21 +72,22 @@
         }
 
         async function executeLogin() {
-            const phone = document.getElementById('login-phone').value.trim();
-            const password = document.getElementById('login-pass').value.trim();
-            if(!phone || !password) return alert("Please fill out your credentials.");
+    const phone = document.getElementById('login-phone').value.trim();
+    const password = document.getElementById('login-pass').value.trim();
+    if(!phone || !password) return alert("Please fill out your credentials.");
 
-            try {
-                const res = await fetch('/api/login', {
-                    method: 'POST',
-                    headers: {'Content-Type': 'application/json'},
-                    body: JSON.stringify({ phone, password })
-                });
-                const data = await res.json();
-                if(data.success) { window.location.href = data.redirect; }
-                else { alert(data.message || "Invalid credentials."); }
-            } catch(e) { alert("Network connection failure."); }
-        }
+    try {
+        // CHANGED: Removed the '/api' prefix to match your Flask route exactly
+        const res = await fetch('/login', {
+            method: 'POST',
+            headers: {'Content-Type': 'application/json'},
+            body: JSON.stringify({ phone, password })
+        });
+        const data = await res.json();
+        if(data.success) { window.location.href = data.redirect; }
+        else { alert(data.message || "Invalid credentials."); }
+    } catch(e) { alert("Network connection failure."); }
+}
 
         async function executeRegistration() {
             const name = document.getElementById('reg-name').value.trim();
