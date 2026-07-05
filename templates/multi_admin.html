@@ -294,19 +294,29 @@
         function closeMembershipModal() { document.getElementById('membership-modal').classList.add('hidden'); }
         
         async function saveMembershipAllocation() { 
-            const groupId = document.getElementById('modal-group-id').value; 
-            const checkNodes = document.querySelectorAll('.user-check-node:checked'); 
-            const userIds = Array.from(checkNodes).map(node => parseInt(node.value)); 
-            const res = await fetch('/api/admin/update-membership', { 
-                method: 'POST', 
-                headers: {'Content-Type': 'application/json'}, 
-                body: JSON.stringify({ group_id: parseInt(groupId), user_ids: userIds }) 
-            }); 
-            if ((await res.json()).success) {
-                alert("🔒 Group Access Matrix successfully synchronized!");
-                closeMembershipModal();
-            }
+    const groupId = document.getElementById('modal-group-id').value; 
+    const checkNodes = document.querySelectorAll('.user-check-node:checked'); 
+    const userIds = Array.from(checkNodes).map(node => parseInt(node.value)); 
+    
+    try {
+        const res = await fetch('/api/admin/update-membership', { 
+            method: 'POST', 
+            headers: {'Content-Type': 'application/json'}, 
+            body: JSON.stringify({ group_id: parseInt(groupId), user_ids: userIds }) 
+        }); 
+        
+        const data = await res.json();
+        if (data.success) {
+            alert("🔒 Group Access Matrix successfully synchronized!");
+            closeMembershipModal();
+            window.location.reload(); // Reloads layout to reflect newly mapped users instantly
+        } else {
+            alert("Failed to update memberships: " + data.message);
         }
+    } catch(e) {
+        alert("Network communication failure mapping user constraints.");
+    }
+}
     </script>
 </body>
 </html>
