@@ -24,7 +24,7 @@ app.config['SQLALCHEMY_ENGINE_OPTIONS'] = {
 
 db = SQLAlchemy(app)
 
-SECRET_CHIT_CODE = "GRAMA2026"
+SECRET_CHIT_CODE = "CHIT2026"
 LIVE_BID_LOGS = {}
 
 # ================= RELATIONAL DATA SCHEMAS =================
