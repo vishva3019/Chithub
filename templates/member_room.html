@@ -4,7 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>ChitHub - Member Portal</title>
-   <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    <!-- 🚀 RESILIENT CROSS-PLATFORM INTERFACE ENGINE CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@tailwindcss/browser@4"></script>
+    
+    <!-- 🛠️ FIXED: Wrapped custom stylesheets inside proper style tags to prevent raw text leaking on mobile -->
+    <style>
         .premium-bg {
             background-color: #0b0f19;
             background-image: 
@@ -14,83 +18,104 @@
                 linear-gradient(90deg, rgba(255, 255, 255, 0.004) 1px, transparent 1px);
             background-size: 100% 100%, 100% 100%, 32px 32px, 32px 32px;
         }
-        @keyframes laserSweep { 0% { top: 0%; opacity: 0; } 10% { opacity: 1; } 90% { opacity: 1; } 100% { top: 100%; opacity: 0; } }
-        .scanner-laser { position: absolute; left: 0; width: 100%; height: 2px; background: linear-gradient(to right, transparent, #6366f1, #22d3ee, #6366f1, transparent); box-shadow: 0 0 8px #22d3ee; animation: laserSweep 2s linear infinite; }
+        @keyframes laserSweep { 
+            0% { top: 0%; opacity: 0; } 
+            10% { opacity: 1; } 
+            90% { opacity: 1; } 
+            100% { top: 100%; opacity: 0; } 
+        }
+        .scanner-laser { 
+            position: absolute; 
+            left: 0; 
+            width: 100%; 
+            height: 2px; 
+            background: linear-gradient(to right, transparent, #6366f1, #22d3ee, #6366f1, transparent); 
+            box-shadow: 0 0 8px #22d3ee; 
+            animation: laserSweep 2s linear infinite; 
+        }
     </style>
 </head>
 <body class="premium-bg text-slate-100 font-sans min-h-screen antialiased">
 
+    <!-- NAVIGATION BAR HEADER LAYER -->
     <nav class="bg-slate-950/70 backdrop-blur-md border-b border-slate-800/60 p-4 flex justify-between items-center shadow-lg sticky top-0 z-40">
         <div>
             <h1 class="text-xl font-black bg-gradient-to-r from-indigo-400 via-purple-400 to-cyan-400 bg-clip-text text-transparent tracking-tight">ChitHub</h1>
-            <p class="text-xs text-slate-400">Welcome, <span id="profile-name" class="font-bold text-slate-200">{{ user_name }}</span></p>
+            <p class="text-xs text-slate-400">Welcome, <span id="profile-name" class="font-bold text-indigo-400 uppercase">{{ user_name }}</span></p>
         </div>
-        <a href="/logout" class="bg-slate-900/80 border border-slate-800 px-4 py-2 rounded-xl text-xs font-bold backdrop-blur-sm">Logout Portal</a>
+        <a href="/logout" class="bg-slate-900/80 border border-slate-800 px-4 py-2 rounded-xl text-xs font-bold backdrop-blur-sm active:scale-95 transition-all">Logout Portal</a>
     </nav>
 
-    <main class="max-w-5xl mx-auto p-4 lg:p-6 space-y-8 relative z-10">
+    <!-- MAIN BODY GRID FRAME -->
+    <main class="max-w-5xl mx-auto p-4 sm:p-6 space-y-6 relative z-10">
         {% if not groups %}
-        <div class="bg-slate-950/40 border border-slate-800/80 rounded-3xl p-10 text-center max-w-2xl mx-auto my-12 shadow-2xl space-y-8 backdrop-blur-xl">
+        <div class="bg-slate-950/40 border border-slate-800/80 rounded-3xl p-10 text-center max-w-2xl mx-auto my-12 shadow-2xl space-y-4 backdrop-blur-xl">
             <h2 class="text-2xl font-black text-white tracking-tight">System Authenticated</h2>
             <p class="text-xs text-slate-400">Awaiting membership mapping by administration deck...</p>
         </div>
         {% endif %}
 
         {% for g in groups %}
-        <div class="member-chit-card bg-slate-950/40 border border-slate-800/80 rounded-3xl p-6 shadow-2xl space-y-6 backdrop-blur-xl" data-id="{{ g.id }}" id="card-node-{{ g.id }}">
-            <div class="flex justify-between items-start border-b border-slate-800/60 pb-3">
+        <div class="member-chit-card bg-slate-950/40 border border-slate-800/80 rounded-3xl p-4 sm:p-6 shadow-2xl space-y-6 backdrop-blur-xl" data-id="{{ g.id }}" id="card-node-{{ g.id }}">
+            
+            <!-- SCHEME NAME AND BADGES HEADER BAR -->
+            <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-slate-800/60 pb-3">
                 <div>
-                    <h2 class="text-lg font-black text-white tracking-tight">{{ g.name }}</h2>
-                    <p class="text-xs text-slate-400">Face Value: <span class="text-indigo-400 font-bold">₹{{ "{:,}".format(g.total_pool) }}</span></p>
+                    <h2 class="text-lg font-black text-white tracking-tight">📂 {{ g.name }}</h2>
+                    <p class="text-xs text-slate-400">Face Value: <span class="text-emerald-400 font-bold">₹{{ "{:,}".format(g.total_pool) }}</span></p>
                 </div>
-                <div id="status-badge-{{ g.id }}">
-                    <span class="bg-slate-900 text-slate-500 border border-slate-800 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider">🔒 Locked Until Next Schedule</span>
+                <div id="status-badge-{{ g.id }}" class="w-full sm:w-auto text-left sm:text-right">
+                    <span class="bg-slate-900 text-slate-500 border border-slate-800 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider block sm:inline text-center">🔒 Locked Until Next Schedule</span>
                 </div>
             </div>
 
+            <!-- BIDDING INTERACTIVE INTERFACE PANEL (Optimized columns for Mobile stacking) -->
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4 transition-all duration-300" id="bidding-grid-{{ g.id }}">
-                <div class="bg-slate-900/80 border border-slate-800 p-5 rounded-2xl text-center space-y-4">
+                <div class="bg-slate-900/80 border border-slate-800 p-4 sm:p-5 rounded-2xl text-center space-y-4">
                     <div>
                         <p class="text-[10px] text-slate-400 uppercase font-black tracking-widest">Accumulated Discount Value</p>
-                        <h1 class="text-4xl font-black mt-1 text-emerald-400 tracking-tight" id="member-val-{{ g.id }}">₹0</h1>
-                        <p class="text-xs text-slate-300 mt-1.5 bg-slate-950 border border-slate-800 rounded-lg inline-block font-semibold" id="member-lbl-{{ g.id }}">🏆 Standing: None</p>
+                        <h1 class="text-3xl sm:text-4xl font-black mt-1 text-emerald-400 tracking-tight" id="member-val-{{ g.id }}">₹0</h1>
+                        <p class="text-xs text-slate-300 mt-1.5 bg-slate-950 border border-slate-800 px-3 py-1 rounded-lg inline-block font-semibold shadow-inner" id="member-lbl-{{ g.id }}">🏆 Standing: None</p>
                     </div>
-                    <div class="grid grid-cols-4 gap-1.5">
-                        <button onclick="submitIncrement('{{ g.id }}', 500)" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-lg text-[11px] transition-all">+₹500</button>
-                        <button onclick="submitIncrement('{{ g.id }}', 1000)" class="bg-indigo-600 hover:bg-indigo-500 text-white font-bold py-2 rounded-lg text-[11px] transition-all">+₹1k</button>
-                        <button onclick="submitIncrement('{{ g.id }}', 1500)" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-lg text-[11px] transition-all">+₹1.5k</button>
-                        <button onclick="submitIncrement('{{ g.id }}', 2000)" class="bg-slate-800 hover:bg-slate-700 text-white font-bold py-2 rounded-lg text-[11px] transition-all">+₹2k</button>
+                    <!-- Fluid touch controls for seamless tracking updates -->
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2">
+                        <button onclick="submitIncrement('{{ g.id }}', 500)" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-950 text-white font-bold py-2.5 rounded-xl text-xs transition-all shadow-sm">+₹500</button>
+                        <button onclick="submitIncrement('{{ g.id }}', 1000)" class="bg-indigo-600 hover:bg-indigo-500 active:bg-indigo-800 text-white font-bold py-2.5 rounded-xl text-xs transition-all shadow-md">+₹1k</button>
+                        <button onclick="submitIncrement('{{ g.id }}', 1500)" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-950 text-white font-bold py-2.5 rounded-xl text-xs transition-all shadow-sm">+₹1.5k</button>
+                        <button onclick="submitIncrement('{{ g.id }}', 2000)" class="bg-slate-800 hover:bg-slate-700 active:bg-slate-950 text-white font-bold py-2.5 rounded-xl text-xs transition-all shadow-sm">+₹2k</button>
                     </div>
                 </div>
 
-                <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-4 flex flex-col h-44 md:h-auto justify-center">
-                    <p class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-2 border-b border-slate-800 pb-1.5 self-start w-full text-left">🔨 Auction Bidding Activity Stream</p>
+                <div class="bg-slate-900/40 border border-slate-800 rounded-2xl p-4 flex flex-col h-44 sm:h-auto min-h-[150px] justify-center">
+                    <p class="text-[10px] font-black text-indigo-400 uppercase tracking-wider mb-2 border-b border-slate-800 pb-1.5 self-start w-full text-left">🔨 Auction Bidding Activity Stream</p>
                     <div id="live-stream-{{ g.id }}" class="space-y-1.5 overflow-y-auto flex-1 text-xs font-mono text-slate-400 pr-1">
-                        <p class="text-slate-500 italic text-[11px] text-center">No active stream logs.</p>
+                        <p class="text-slate-500 italic text-[11px] text-center py-4">No active stream logs.</p>
                     </div>
                 </div>
             </div>
 
+            <!-- LEDGER & INTEGRATED SETACTION HOUSING BLOCK -->
             <div class="grid grid-cols-1 lg:grid-cols-3 gap-4">
                 <div class="lg:col-span-2 bg-slate-900/20 border border-slate-800 rounded-2xl overflow-hidden shadow-inner">
                     <div class="bg-slate-900/60 border-b border-slate-800 px-4 py-2.5"><h4 class="text-[11px] font-black uppercase text-slate-300 tracking-wide">📋 Complete Historical Itemized Ledger Logs</h4></div>
                     <div class="overflow-x-auto">
-                        <table class="w-full text-left text-[11px] border-collapse">
+                        <table class="w-full text-left text-[11px] border-collapse min-w-[500px]">
                             <thead>
                                 <tr class="bg-slate-950/80 border-b border-slate-800 font-bold text-slate-400">
                                     <th class="p-3">Month</th><th class="p-3">Winner</th><th class="p-3 text-center">Last Bid</th><th class="p-3 text-center text-amber-500">Agent Fee</th><th class="p-3 text-center text-teal-400">Dividend Saved</th><th class="p-3 text-center text-indigo-400">Your Net Payable</th>
                                 </tr>
                             </thead>
                             <tbody id="ledger-body-{{ g.id }}" class="divide-y divide-slate-800/40 font-semibold text-slate-300">
-                                <tr class="member-ledger-placeholder"><td colspan="6" class="text-center p-8 text-slate-600 italic font-mono">No cycles closed yet.</td></tr>
+                                <tr class="member-ledger-placeholder"><td colspan="6" class="text-center p-8 text-slate-500 italic font-mono">No cycles closed yet.</td></tr>
                             </tbody>
                         </table>
                     </div>
                 </div>
 
-                <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-4 flex flex-col items-center justify-center text-center space-y-3">
+                <!-- QR SETTLEMENT MODULE CARD -->
+                <div class="bg-slate-950/60 border border-slate-800 rounded-2xl p-4 flex flex-col items-center justify-center text-center space-y-3 shadow-inner">
                     <span class="text-[9px] font-black tracking-widest text-indigo-400 uppercase">⚡ Current Dynamic Settlement Handle</span>
-                    <div class="bg-white p-2 rounded-xl relative overflow-hidden" id="qr-container-{{ g.id }}">
+                    <div class="bg-white p-2 rounded-2xl relative overflow-hidden shadow-md shadow-black/40" id="qr-container-{{ g.id }}">
                         <div class="w-32 h-32 flex flex-col items-center justify-center text-[10px] text-slate-400 italic font-sans p-2 bg-slate-50 border rounded-lg border-dashed border-slate-200"><span class="text-lg mb-1 animate-pulse">📡</span><span>Awaiting data</span><div class="scanner-laser"></div></div>
                     </div>
                     <div>
@@ -103,6 +128,7 @@
         {% endfor %}
     </main>
 
+    <!-- ASYNC CONTROLLER HANDLE SYSTEM SCRIPT CORE -->
     <script>
         document.querySelectorAll('.member-chit-card').forEach(card => {
             const id = parseInt(card.getAttribute('data-id'));
@@ -123,10 +149,10 @@
                 
                 if(data.is_active) {
                     grid.classList.remove('opacity-45', 'pointer-events-none', 'select-none');
-                    badge.innerHTML = `<span class="bg-emerald-950 text-emerald-400 border border-emerald-900 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider animate-pulse">● Live Bidding Open</span>`;
+                    badge.innerHTML = `<span class="bg-emerald-950 text-emerald-400 border border-emerald-900 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider animate-pulse block text-center sm:inline">● Live Bidding Open</span>`;
                 } else {
                     grid.classList.add('opacity-45', 'pointer-events-none', 'select-none');
-                    badge.innerHTML = `<span class="bg-slate-900 text-slate-500 border border-slate-800 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider">🔒 Locked Until Next Schedule</span>`;
+                    badge.innerHTML = `<span class="bg-slate-900 text-slate-500 border border-slate-800 text-[10px] font-black px-3 py-1.5 rounded-full uppercase tracking-wider block text-center sm:inline">🔒 Locked Until Next Schedule</span>`;
                 }
 
                 document.getElementById(`member-val-${groupId}`).innerText = "₹" + data.highest_bid.toLocaleString('en-IN');
@@ -136,14 +162,18 @@
                 if(data.bids.length > 0 && stream) {
                     stream.innerHTML = '';
                     data.bids.forEach(b => {
-                        stream.insertAdjacentHTML('beforeend', `<div class="flex justify-between bg-slate-950 p-1.5 rounded-lg border border-slate-800/40"><span><b>${b.name}</b> +₹${b.increment.toLocaleString('en-IN')}</span><span>₹${b.total.toLocaleString('en-IN')}</span></div>`);
+                        stream.insertAdjacentHTML('beforeend', `<div class="flex justify-between bg-slate-950/80 px-2.5 py-1.5 rounded-xl border border-slate-800/40"><span><b>${b.name}</b> +₹${b.increment.toLocaleString('en-IN')}</span><span class="text-emerald-400 font-bold">₹${b.total.toLocaleString('en-IN')}</span></div>`);
                     });
                 }
             } catch(e){}
         }
 
         async function submitIncrement(groupId, value) {
-            await fetch('/api/chit/place-bid', { method: 'POST', headers: {'Content-Type':'application/json'}, body: JSON.stringify({group_id: groupId, increment: parseFloat(value)}) });
+            await fetch('/api/chit/place-bid', { 
+                method: 'POST', 
+                headers: {'Content-Type':'application/json'}, 
+                body: JSON.stringify({group_id: groupId, increment: parseFloat(value)}) 
+            });
             pollRoomState(groupId);
         }
 
@@ -164,14 +194,22 @@
                 else if (historyWinners.slice(0, item.month - 1).includes(myName)) dueLabel = "₹" + result.base_installment.toLocaleString('en-IN') + " (Full)";
                 else dueLabel = "₹" + item.due_non_winner.toLocaleString('en-IN') + " (Discounted)";
 
-                tbody.insertAdjacentHTML('beforeend', `<tr class="hover:bg-slate-900/40 border-b border-slate-800/40"><td class="p-3 text-slate-400 font-mono">Month ${item.month}</td><td class="p-3 text-white font-bold">${item.winner || "History Entry"}</td><td class="p-3 text-center font-mono">₹${Number(item.bid).toLocaleString('en-IN')}</td><td class="p-3 text-center text-amber-500 font-mono">₹${Number(item.agent_fee).toLocaleString('en-IN')}</td><td class="p-3 text-center text-teal-400 font-mono">₹${Number(item.dividend_per_head).toLocaleString('en-IN')}</td><td class="p-3 text-center font-mono text-indigo-400">${dueLabel}</td></tr>`);
+                tbody.insertAdjacentHTML('beforeend', `
+                    <tr class="hover:bg-slate-900/40 border-b border-slate-800/40 transition-colors">
+                        <td class="p-3 text-slate-400 font-mono">Month ${item.month}</td>
+                        <td class="p-3 text-white font-bold">${item.winner || "History Entry"}</td>
+                        <td class="p-3 text-center font-mono">₹${Number(item.bid).toLocaleString('en-IN')}</td>
+                        <td class="p-3 text-center text-amber-500 font-mono">₹${Number(item.agent_fee).toLocaleString('en-IN')}</td>
+                        <td class="p-3 text-center text-teal-400 font-mono">₹${Number(item.dividend_per_head).toLocaleString('en-IN')}</td>
+                        <td class="p-3 text-center font-mono text-indigo-400 font-bold">${dueLabel}</td>
+                    </tr>`);
             });
         }
 
         function generateSettlementQR(groupId, cycle, myName, baseInstallment, historyWinners) {
             let targetAmount = 0; let titleText = "";
             if (myName === cycle.winner) { targetAmount = 0; titleText = "You won! Payout Pending"; }
-            else if (historyWinners.slice(0, cycle.month - 1).includes(myName)) { targetAmount = baseInstallment; titleText = `Pay Full Installment: ₹${targetAmount}`; }
+            else if (historyWinners.slice(0, cycle.month - 1).includes(myName)) { targetAmount = baseInstallment; titleText = `Pay Full: ₹${targetAmount}`; }
             else { targetAmount = cycle.due_non_winner; titleText = `Pay Discounted: ₹${targetAmount}`; }
 
             const qrContainer = document.getElementById(`qr-container-${groupId}`);
@@ -185,7 +223,7 @@
             }
 
             const upiString = `upi://pay?pa=9686193049@slc&pn=ChitFundsOrganizer&am=${targetAmount}&cu=INR&tn=Chit_Month_${cycle.month}`;
-            qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiString)}" alt="Scan to Pay" class="w-32 h-32 rounded-lg border">`;
+            qrContainer.innerHTML = `<img src="https://api.qrserver.com/v1/create-qr-code/?size=150x150&data=${encodeURIComponent(upiString)}" alt="Scan to Pay" class="w-32 h-32 rounded-xl border border-slate-200">`;
             if(titleContainer) titleContainer.innerText = titleText;
         }
     </script>
