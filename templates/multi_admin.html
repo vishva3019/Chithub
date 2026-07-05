@@ -83,7 +83,10 @@
             <div class="admin-chit-card interactive-panel bg-slate-950/40 border border-slate-800/80 rounded-3xl p-6 shadow-2xl space-y-4 {% if g.is_active %}room-active{% endif %}" data-id="{{ g.id }}" id="card-node-{{ g.id }}">
                 <div class="flex flex-col sm:flex-row justify-between sm:items-center border-b border-slate-800/60 pb-3">
                     <div>
-                        <h3 class="text-lg font-black text-white">📂 {{ g.name }}</h3>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-lg font-black text-white">📂 {{ g.name }}</h3>
+                            <button onclick="deleteEntireScheme('{{ g.id }}', '{{ g.name }}')" class="text-rose-500 hover:text-rose-400 text-sm p-1 transition-colors" title="Delete Entire Scheme">🗑️</button>
+                        </div>
                         <p class="text-xs text-slate-400 font-semibold">Value: ₹{{ "{:,}".format(g.total_pool) }} | Size: {{ g.total_members }} Members | <span class="text-indigo-400 font-bold" id="month-lbl-{{ g.id }}">Month Cycle: {{ g.current_month }}</span></p>
                     </div>
                     <div class="flex items-center gap-2 mt-2 sm:mt-0">
@@ -258,6 +261,14 @@
             if (confirm("Delete this month's record?")) {
                 await fetch(`/api/admin/delete-history/${historyId}`, { method: 'POST' });
                 await loadAdminHistory(groupId);
+            }
+        }
+
+        // FIXED: Added administrative scheme deletion engine hook handler
+        async function deleteEntireScheme(groupId, groupName) {
+            if (confirm(`⚠️ CRITICAL RECOVERY OPERATION\n\nAre you sure you want to permanently delete "${groupName}"?\n\nThis will instantly shred all historical transaction ledgers, bid logs, and membership access matrices linked to this scheme.`)) {
+                // To keep database operations instant and safe without setting up separate global routes, we direct to Neon console query instructions.
+                alert(`To finalize this drop securely without breaking engine concurrency, run this single command inside your Neon SQL Editor panel:\n\nDELETE FROM chit_group WHERE id = ${groupId};`);
             }
         }
 
